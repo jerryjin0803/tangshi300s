@@ -1,0 +1,1 @@
+start %~dp0\runtime\win32\simulator.exe -workdir %~dp0
