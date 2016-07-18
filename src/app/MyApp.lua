@@ -40,5 +40,9 @@ function MyApp:playLevel(levelIndex)
     self:enterScene("PlayLevelScene", {levelIndex}, "fade", 0.6, display.COLOR_WHITE)
 end
 
+function MyApp:enterAboutScene()
+    self:enterScene("AboutScene", nil, "fade", 0.6, display.COLOR_WHITE)
+end
+
 -- appInstance = MyApp
 return MyApp

@@ -34,13 +34,16 @@ function PlayLevelScene:ctor(levelIndex)
     self.board:addEventListener("LEVEL_COMPLETED", handler(self, self.onLevelCompleted))
     self:addChild(self.board)
 
+    --返回按钮
     cc.ui.UIPushButton.new({normal = "#BackButton.png", pressed = "#BackButtonSelected.png"})
         :align(display.CENTER, display.right - 100, display.bottom + 120)
         :onButtonClicked(function()
+            audio.playSound(GAME_SFX.backButton)
             app:enterChooseLevelScene()
             print("ooooooooooooooooooooooooooooout ")
         end)
         :addTo(self)
+        
 end
 
 function PlayLevelScene:onLevelCompleted()

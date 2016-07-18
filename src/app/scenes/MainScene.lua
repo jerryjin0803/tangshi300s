@@ -13,9 +13,9 @@ function MainScene:ctor()
     self.adBar = AdBar.new()
     self:addChild(self.adBar)
 
+    --跳转到：多余界面
     self.moreGamesButton = BubbleButton.new({
             image = "#MenuSceneMoreGamesButton.png",
-            sound = GAME_SFX.tapButton,
             prepare = function()
                 audio.playSound(GAME_SFX.tapButton)
                 self.moreGamesButton:setButtonEnabled(false)
@@ -27,11 +27,11 @@ function MainScene:ctor()
         :align(display.CENTER, display.left + 150, display.bottom + 300)
         :addTo(self)
 
+    --跳转到：选关界面
     self.startButton = BubbleButton.new({
             image = "#MenuSceneStartButton.png",
-            sound = GAME_SFX.tapButton,
             prepare = function()
-                audio.playSound(GAME_SFX.tapButton)
+                --audio.playSound(GAME_SFX.tapButton)
                 self.startButton:setButtonEnabled(false)
             end,
             listener = function()
@@ -39,6 +39,20 @@ function MainScene:ctor()
             end,
         })
         :align(display.CENTER, display.right - 150, display.bottom + 300)
+        :addTo(self)
+
+    --跳转到：简介界面
+    self.aboutButton = BubbleButton.new({
+            image = "#MenuSceneStartButton.png",
+            prepare = function()
+                audio.playSound(GAME_SFX.tapButton)
+                self.startButton:setButtonEnabled(false)
+            end,
+            listener = function()
+                app:enterAboutScene()
+            end,
+        })
+        :align(display.CENTER, display.cx, display.bottom + 600)
         :addTo(self)
 
 end

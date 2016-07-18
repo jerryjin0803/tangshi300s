@@ -12,9 +12,11 @@ function MoreGamesScene:ctor()
     self.adBar = AdBar.new()
     self:addChild(self.adBar)
 
+    --返回按钮
     cc.ui.UIPushButton.new("#BackButton.png")
         :align(display.CENTER, display.right - 100, display.bottom + 120)
         :onButtonClicked(function()
+            audio.playSound(GAME_SFX.backButton)
             app:enterMainScene()
         end)
         :addTo(self)
