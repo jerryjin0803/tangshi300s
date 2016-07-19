@@ -7,7 +7,7 @@ local MainScene = class("MainScene", function()
 end)
 
 function MainScene:ctor()
-    self.bg = display.newSprite("#MenuSceneBg.png", display.cx, display.cy)
+    self.bg = display.newSprite("#MenuSceneBg.png", display.cx, display.cy):zorder(0)
     self:addChild(self.bg)
 
     self.adBar = AdBar.new()
