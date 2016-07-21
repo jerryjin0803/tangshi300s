@@ -55,6 +55,13 @@ function MainScene:ctor()
         :align(display.CENTER, display.cx, display.bottom + 600)
         :addTo(self)
 
+    -- 初始化相减数据
+    self:init()
+
+end
+
+function MainScene:init()
+
 end
 
 function MainScene:onEnter()
