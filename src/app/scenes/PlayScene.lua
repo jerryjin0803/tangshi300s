@@ -10,6 +10,7 @@ local peotry_word = {}  -- 整句诗从字符器拆成上下句，放到此数�
 local txtBoxSize = cc.size(60,80)
 local c1 = cc.c4b(150,200,190,200)
 local c2 = cc.c4b(100,100,50,200)
+local buttonBoundingBoxs = {}-- 用来存放正确选荐的碰撞框。
 
 
 local PlayScene = class("PlayScene", function()
@@ -45,19 +46,31 @@ function PlayScene:ctor(levelIdx)
     -- :align(display.CENTER, display.cx, display.top-250)
     -- self:addChild(self.labeldown)
 
-    --执行按钮
-    self.goButton = BubbleButton.new({
-            image = "#MenuSceneStartButton.png",
-            sound = GAME_SFX.tapButton,
-            prepare = function()
-                audio.playSound(GAME_SFX.tapButton)
-            end,
-            listener = function()           
-                self:showPoetryWord()
-            end,
-        })
-        :align(display.CENTER, display.cx, display.bottom + 200)
-        :addTo(self)
+
+    -- 炮台
+    self.emplacement = display.newScale9Sprite("wordBg.png")
+    :setContentSize(cc.size(200, 200))
+    :align(display.CENTER, display.cx, display.bottom + 200)
+    :addTo(self)    
+    :setOpacity(80)
+    -- 获取碰撞框
+    self.emplacementBoundingBox = self.emplacement:getBoundingBox()
+
+
+
+    ----执行按钮
+    -- self.goButton = BubbleButton.new({
+    --         image = "#MenuSceneStartButton.png",
+    --         sound = GAME_SFX.tapButton,
+    --         prepare = function()
+    --             audio.playSound(GAME_SFX.tapButton)
+    --         end,
+    --         listener = function()           
+    --             self:showPoetryWord()
+    --         end,
+    --     })
+    --     :align(display.CENTER, display.cx, display.bottom + 200)
+    --     :addTo(self)
 
     --返回按钮
     cc.ui.UIPushButton.new({normal = "#BackButton.png", pressed = "#BackButtonSelected.png"})
@@ -68,6 +81,7 @@ function PlayScene:ctor(levelIdx)
             print("ooooooooooooooooooooooooooooout ")
         end)
         :addTo(self)
+
         
 end
 
@@ -92,9 +106,62 @@ function PlayScene:onLevelCompleted()
 end
 
 function PlayScene:onEnter()
-
+    self:setTouchEnabled(true)
+    :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
+        return self:onTouch(event.name, event.x, event.y)
+    end)
 end
 
+-- 触摸相关事件
+function PlayScene:onTouchBegan(x, y)
+    --print("开始触摸：", x, y)
+    -- local p = cc.p(x, y)
+    -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
+    --     self.state = "fireControlOn"
+    -- else
+    --     self.state = "fireControlOff"
+    -- end
+end
+
+function PlayScene:onTouchMoved(x, y)
+    --print("触摸移动中：", x, y)
+    -- local p = cc.p(x, y)
+    -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
+    --     self.state = "fireControlOn"
+    -- else
+    --     self.state = "fireControlOff"
+    -- end
+end
+
+function PlayScene:onTouchEnded(x, y)
+    --print("手指离开：", x, y)
+    local p = cc.p(x, y)
+    if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
+        print("选字就位，准备发射!")
+        for k,v in pairs(OOXX_table_idx) do
+            --transition.rotateTo(self.downGroup[k], {rotate = 180, time = 0.5})
+            print(self.downGroup[k])
+            print(k,v)
+        end
+        audio.playSound(GAME_SFX.tapButton)
+    end
+end 
+
+function PlayScene:onTouch(event, x, y)
+    if event == "began" then
+        --print(event, x, y)
+        self:onTouchBegan(x, y)
+        return true
+    elseif event == "moved" then
+        --print(event, x, y)
+        self:onTouchMoved(x, y)
+        return true
+    else--if event ~= "" then
+        --print(event, x, y)
+        self:onTouchEnded(x, y)
+        return true
+    end
+end
 -- 显示上句
 function  PlayScene:showPoetryUp()
 
@@ -231,14 +298,33 @@ function  PlayScene:showPoetryUp()
 
     -- 创建一个容器,用来放答案选项
     self.pickGroup = display.newNode()
-
+    local tempBtn
     --逐个创建答案选项 
     for i=1,strLen do
         temp_str = rand_str_array[i]
-        self.pickGroup:addChild(self:createTxtBox(temp_str,cc.p(
-            display.left + (txtBoxSize.width+ySpacing)*(i-1),
-            display.bottom
-            )))  --display.top - 
+        -- 创建按钮
+        tempBtn = self:createTxtBox(
+            temp_str,
+            cc.p(
+                display.left + (txtBoxSize.width+ySpacing)*(i-1),
+                display.bottom
+                )
+            )
+        cc(tempBtn):addComponent("components.ui.DraggableProtocol")
+        :exportMethods()
+        :setDraggableEnable(true)
+        -- 添加到容器中
+        self.pickGroup:addChild(tempBtn)
+        -- 碰撞框添加到数组中
+        table.insert(buttonBoundingBoxs,tempBtn:getBoundingBox())
+
+        --添加监听事件
+        tempBtn:setTouchEnabled(true)
+        :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
+            return self:onTouch(event.name, event.x, event.y)
+        end)
+
+        --self.pickGroup:addChild()
     end
     self:addChild(self.pickGroup)
 
