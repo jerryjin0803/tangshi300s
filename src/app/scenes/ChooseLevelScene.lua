@@ -1,3 +1,4 @@
+local Levels = import("..data.Levels")
 local BubbleButton = import("..views.BubbleButton")
 
 local ChooseLevelScene = class("ChooseLevelScene", function()

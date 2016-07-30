@@ -1,17 +1,16 @@
 
 local Levels = import("..data.Levels")
-local Board = import("..views.Board")
 local AdBar = import("..views.AdBar")
 local BubbleButton = import("..views.BubbleButton")
 local peotry_anthology_ --当前关卡所用诗句
-local OOXX_table_idx --要填的字对应的索引
-local gLevel = 1 --游戏难度。越高时，要填的空就越多。最多不超过全句
 local peotry_word = {}  -- 整句诗从字符器拆成上下句，放到此数组中
+local OOXX_table_idx = {}--要填的字对应的索引
+local gLevel =2  --游戏难度。越高时，要填的空就越多。最多不超过全句
 local txtBoxSize = cc.size(60,80)
 local c1 = cc.c4b(150,200,190,200)
 local c2 = cc.c4b(100,100,50,200)
 local buttonBoundingBoxs = {}-- 用来存放正确选荐的碰撞框。
-
+local number_successes = 0 -- 成功答题次数，用来判断是否答完。可继续下一句
 
 local PlayScene = class("PlayScene", function()
     return display.newScene("PlayScene")
@@ -46,17 +45,19 @@ function PlayScene:ctor(levelIdx)
     -- :align(display.CENTER, display.cx, display.top-250)
     -- self:addChild(self.labeldown)
 
-
     -- 炮台
     self.emplacement = display.newScale9Sprite("wordBg.png")
     :setContentSize(cc.size(200, 200))
     :align(display.CENTER, display.cx, display.bottom + 200)
     :addTo(self)    
     :setOpacity(80)
+    :addChild(-- 加入测试点，显示锚点 0，0 位置
+        cc.LayerColor:create(cc.c4b(0,0,0,255),5,5)
+        :align(display.CENTER, 0, 0)
+        )
+
     -- 获取碰撞框
     self.emplacementBoundingBox = self.emplacement:getBoundingBox()
-
-
 
     ----执行按钮
     -- self.goButton = BubbleButton.new({
@@ -92,7 +93,26 @@ function PlayScene:init(levelIdx)
     self:showPoetryUp()
 
     -- 初始难度等级 （还未实现具体的难度等级控制。默认先用1级）
-    gLevel = 1
+    -- gLevel = 1
+
+    -- 创建进度条显示
+    self:loadBar()
+end
+
+-- 创建进度条显示,用于判别操作的 好坏程度
+function PlayScene:loadBar()
+    print("PlayScene:loadBar")
+    local loadBar = cc.ui.UILoadingBar.new({
+        scale9 = true,
+        capInsets = cc.rect(5,5,5,5), -- scale region
+        image =  "wordBg.png", -- loading bar image
+        viewRect = cc.rect(0,0,400,20), -- set loading bar rect
+        percent = 100, -- set loading bar percent
+        -- direction = DIRECTION_RIGHT_TO_LEFT
+        -- direction = DIRECTION_LEFT_TO_RIGHT -- default
+    })
+    :addTo(self)
+    :align(display.CENTER,display.cx , display.cy)
 end
 
 function PlayScene:onLevelCompleted()
@@ -108,13 +128,14 @@ end
 function PlayScene:onEnter()
     self:setTouchEnabled(true)
     :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
-        return self:onTouch(event.name, event.x, event.y)
+        return self:onTouch(event, event.x, event.y)
     end)
 end
 
 -- 触摸相关事件
-function PlayScene:onTouchBegan(x, y)
+function PlayScene:onTouchBegan(event,x, y)
     --print("开始触摸：", x, y)
+ 
     -- local p = cc.p(x, y)
     -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
     --     self.state = "fireControlOn"
@@ -123,7 +144,7 @@ function PlayScene:onTouchBegan(x, y)
     -- end
 end
 
-function PlayScene:onTouchMoved(x, y)
+function PlayScene:onTouchMoved(event,x, y)
     --print("触摸移动中：", x, y)
     -- local p = cc.p(x, y)
     -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
@@ -133,35 +154,74 @@ function PlayScene:onTouchMoved(x, y)
     -- end
 end
 
-function PlayScene:onTouchEnded(x, y)
-    --print("手指离开：", x, y)
+function PlayScene:onTouchEnded(event,x, y)
+    print("手指离开：", x, y)
+
     local p = cc.p(x, y)
     if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
-        print("选字就位，准备发射!")
-        for k,v in pairs(OOXX_table_idx) do
-            --transition.rotateTo(self.downGroup[k], {rotate = 180, time = 0.5})
-            print(self.downGroup[k])
-            print(k,v)
+       for k,v in pairs(OOXX_table_idx) do
+            if k == event["tag"] then
+
+                print(k,v)
+                --print("索引值:"..v ,"标签:"..event["tag"],"这是正确答案" )
+                transition.rotateTo(self.downGroup:getChildren()[v], {rotate = 360, time = 0.5})
+
+                local p1,p2,xx,yy
+                local n1 = self.downGroup:getChildren()[v]
+                local n2 = self.emplacement
+
+                -- 我也不知道这个偏移量是怎么产生的cc.p(84,20)
+                p1 = n1:convertToWorldSpace(cc.p(84,20)) 
+                p2 = n2:convertToNodeSpace(p1)
+
+            transition.moveTo(self.pickGroup:getChildren()[k], 
+            {
+                time = 3.2, 
+                delay = 0,
+                x = p2.x,
+                y = p2.y,
+                easing = "backout",
+                -- onComplete = function() print("容器动画，移到正确位置") end,
+            })
+            number_successes = number_successes + 1 --填对一字
+            end
         end
         audio.playSound(GAME_SFX.tapButton)
+        
+        -- 本句是否填完
+        if number_successes >= gLevel then  --不知为啥我就喜欢 >= 感觉完全点
+            number_successes = 0 -- 清空填对计数
+            --播放结束动画
+            transition.scaleTo(self.upGroup, 
+            {
+                time = .2, 
+                scale = 0.5,
+                easing = "BACKIN",
+                onComplete = function() self:showPoetryUp() end,-- 刷新下一句
+            })
+        end
+
     end
 end 
 
 function PlayScene:onTouch(event, x, y)
-    if event == "began" then
+    --local target = event:getCurrentTarget() 
+    -- print("event.getCurrentTarget():".. type(event.getCurrentTarget()))
+    if event.name == "began" then
         --print(event, x, y)
-        self:onTouchBegan(x, y)
+        self:onTouchBegan(event, x, y)
         return true
-    elseif event == "moved" then
+    elseif event.name == "moved" then
         --print(event, x, y)
-        self:onTouchMoved(x, y)
+        self:onTouchMoved(event, x, y)
         return true
     else--if event ~= "" then
         --print(event, x, y)
-        self:onTouchEnded(x, y)
+        self:onTouchEnded(event, x, y)
         return true
     end
 end
+--------------=========================================================
 -- 显示上句
 function  PlayScene:showPoetryUp()
 
@@ -210,18 +270,20 @@ function  PlayScene:showPoetryUp()
     self:addChild(self.upGroup)
 
     -- 将容器放置初始位置
-    self.upGroup:pos(xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
-        display.cy)
+    self.upGroup:pos(
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
+        display.cy 
+        )
     -- 容器动画，移到正确位置
     transition.moveTo(self.upGroup, 
     {
-        time = .2, 
-        x = xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
+        time = .5, 
+        --x = xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
         y = display.top - yOffset,
         easing = "backout",
         onComplete = function() print("上句已出，请对下句！") end,
     })
-
+        --x = xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
     -- ======================显示下句=========================
     --self.labeldown:setString(peotry_word[2]) --调试时显示下句的label
     
@@ -253,15 +315,18 @@ function  PlayScene:showPoetryUp()
         end
 
         -- 创建文字
-        self.downGroup:addChild(self:createTxtBox(temp_str,cc.p(
+        self.downGroup:addChild(
+            self:createTxtBox(temp_str,cc.p(
             display.left + (txtBoxSize.width+ySpacing)*(i-1),
-            display.bottom
-            )))
+            display.bottom))
+            :setTag(i)
+            )
     end
     
     -- 将容器放置初始位置
     self.downGroup:pos(
-        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
+       -- xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
         display.top - yOffset - txtBoxSize.height - xSpacing 
         )
 
@@ -306,8 +371,8 @@ function  PlayScene:showPoetryUp()
         tempBtn = self:createTxtBox(
             temp_str,
             cc.p(
-                display.left + (txtBoxSize.width+ySpacing)*(i-1),
-                display.bottom
+                    display.left + (txtBoxSize.width+ySpacing)*(i-1),
+                    display.bottom
                 )
             )
         cc(tempBtn):addComponent("components.ui.DraggableProtocol")
@@ -321,7 +386,8 @@ function  PlayScene:showPoetryUp()
         --添加监听事件
         tempBtn:setTouchEnabled(true)
         :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
-            return self:onTouch(event.name, event.x, event.y)
+            event["tag"] = i --加个标签用来判断事件发送者
+            return self:onTouch(event, event.x, event.y)
         end)
 
         --self.pickGroup:addChild()
@@ -329,8 +395,11 @@ function  PlayScene:showPoetryUp()
     self:addChild(self.pickGroup)
 
     -- 将容器放置初始位置
-    self.pickGroup:pos(xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
-        display.bottom + txtBoxSize.height)
+    self.pickGroup:pos(
+        --xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
+        display.bottom + txtBoxSize.height
+        )
 
 end
 --==============================================================================
@@ -344,19 +413,27 @@ end
 -- 创建文字底框
 function PlayScene:createTxtBox(text,point)
     -- 每个字的容器
+    -- local box1 = display.newNode()
     local box1 = display.newNode()
     :setCascadeOpacityEnabled(true) --打开了子对象的透明度才受控制
-    
+
     -- 加入文字底图
     local txtBg = display.newScale9Sprite("wordBg.png",txtBoxSize.width/2, txtBoxSize.height/2)
+    :align(display.CENTER, 0, 0)
     box1:addChild(txtBg)
     txtBg:setContentSize(cc.size(txtBoxSize.width, txtBoxSize.height))
     box1:setPosition(point)
 
     -- 加入文字
     local lab1 = display.newTTFLabel({text=text,color=c3,align=cc.ui.TEXT_ALIGN_CENTER,size=50})
-    lab1:setPosition(cc.p(txtBg:getContentSize().width/2,txtBg:getContentSize().height/2))
+    --lab1:setPosition(cc.p(txtBg:getContentSize().width/2,txtBg:getContentSize().height/2))
+    :align(display.CENTER, 0, 0)
     box1:addChild(lab1)
+
+    -- 加入测试点，显示锚点 0，0 位置
+    local anchor_point = cc.LayerColor:create(cc.c4b(0,0,0,255),5,5)
+    :align(display.CENTER, 0, 0)
+    box1:addChild(anchor_point)
 
     return box1
 end

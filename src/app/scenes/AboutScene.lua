@@ -12,17 +12,18 @@ function AboutScene:ctor()
 	self.adBar = AdBar.new()
 	self:addChild(self.adBar)
 	
+    -- 介绍文档区
     cc.ui.UILabel.new({
-            UILabelType = 2, text = "Hello, World", size = 64})
+            UILabelType = 2, text = "大家好，我是笨笨，笨笨的笨，笨笨的笨，谢谢！", size = 64})
         :align(display.CENTER, display.cx, display.cy)
         :addTo(self)
 
-        --返回按钮
+    --返回按钮
     cc.ui.UIPushButton.new({normal = "#BackButton.png", pressed = "#BackButtonSelected.png"})
-        :align(display.CENTER, display.right - 100, display.bottom + 120)
+        :align(display.CENTER, display.left + 100, display.top - 120)
         :onButtonClicked(function()
             audio.playSound(GAME_SFX.backButton)
-            app:enterMainScene()
+            app:enterMainScene("slideInL")
         end)
         :addTo(self)
 end

@@ -13,7 +13,7 @@ function MainScene:ctor()
     self.adBar = AdBar.new()
     self:addChild(self.adBar)
 
-    --跳转到：多余界面
+    --跳转到：游戏玩法介绍界面
     self.moreGamesButton = BubbleButton.new({
             image = "#MenuSceneMoreGamesButton.png",
             prepare = function()
@@ -21,7 +21,7 @@ function MainScene:ctor()
                 self.moreGamesButton:setButtonEnabled(false)
             end,
             listener = function()
-                app:enterMoreGamesScene()
+                app:enterGamesHelpScene()
             end,
         })
         :align(display.CENTER, display.left + 150, display.bottom + 300)
@@ -41,7 +41,7 @@ function MainScene:ctor()
         :align(display.CENTER, display.right - 150, display.bottom + 300)
         :addTo(self)
 
-    --跳转到：简介界面
+    --跳转到：笨笨简介界面
     self.aboutButton = BubbleButton.new({
             image = "#MenuSceneStartButton.png",
             prepare = function()

@@ -24,28 +24,27 @@ function MyApp:run()
     self:enterMainScene()
 end
 
-function MyApp:enterMainScene()
-    self:enterScene("MainScene", nil, "fade", 0.6, display.COLOR_WHITE)
+-- 进入游戏主界面
+function MyApp:enterMainScene(transitionType)
+    local transitionType = transitionType or "fade"
+    self:enterScene("MainScene", nil, transitionType, 0.6, display.COLOR_WHITE)
 end
-
-function MyApp:enterMoreGamesScene()
-    self:enterScene("MoreGamesScene", nil, "fade", 0.6, display.COLOR_WHITE)
-end
-
+-- 进入选关界面
 function MyApp:enterChooseLevelScene()
     self:enterScene("ChooseLevelScene", nil, "fade", 0.6, display.COLOR_WHITE)
 end
-
-function MyApp:playLevel(levelIndex)
-    self:enterScene("PlayLevelScene", {levelIndex}, "fade", 0.6, display.COLOR_WHITE)
-end
-
-function MyApp:enterAboutScene()
-    self:enterScene("AboutScene", nil, "fade", 0.6, display.COLOR_WHITE)
-end
-
+-- 进入游戏场景界面。这里的重点是进入界面时的传参方法
 function MyApp:enterPlayScene(levelIndex)
     self:enterScene("PlayScene", {levelIndex}, "fade", 0.6, display.COLOR_WHITE)
 end
+-- 进入游戏玩法介绍界面
+function MyApp:enterGamesHelpScene()
+    self:enterScene("GamesHelpScene", nil, "slideInL", 0.6)
+end
+-- 进入笨笨介绍界面
+function MyApp:enterAboutScene()
+    self:enterScene("AboutScene", nil, "slideInR", 0.6)
+end
+
 -- appInstance = MyApp
 return MyApp
