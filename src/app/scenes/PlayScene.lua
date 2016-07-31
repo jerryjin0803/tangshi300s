@@ -1,35 +1,44 @@
+require("app.models.TableEx") -- 对 table 的一些扩展功能
 
-local Levels = import("..data.Levels")
-local AdBar = import("..views.AdBar")
-local BubbleButton = import("..views.BubbleButton")
+local Levels = import("..data.Levels") -- 关卡等级数据，诗人诗句之类的
+local BubbleButton = import("..views.BubbleButton") -- 官方例子里的气泡按钮,正好用来当发炮效果
+local Game = import("..models.Game") -- 逻辑层
+
 local peotry_anthology_ --当前关卡所用诗句
 local peotry_word = {}  -- 整句诗从字符器拆成上下句，放到此数组中
 local OOXX_table_idx = {}--要填的字对应的索引
 local gLevel =2  --游戏难度。越高时，要填的空就越多。最多不超过全句
-local txtBoxSize = cc.size(60,80)
-local c1 = cc.c4b(150,200,190,200)
-local c2 = cc.c4b(100,100,50,200)
-local buttonBoundingBoxs = {}-- 用来存放正确选荐的碰撞框。
+local txtBoxSize = cc.size(60,80) -- 文本框大小
+local c1 = cc.c4b(150,200,190,200) -- 填充颜色值1
+local c2 = cc.c4b(100,100,50,200) -- 填充颜色值2
+local buttonBoundingBoxs = {}-- 用来存放正确答案的碰撞框。
 local number_successes = 0 -- 成功答题次数，用来判断是否答完。可继续下一句
+
 
 local PlayScene = class("PlayScene", function()
     return display.newScene("PlayScene")
 end)
 
+
 function PlayScene:ctor(levelIdx)
-    local bg = display.newSprite("#PlayLevelSceneBg.png")
-    -- make background sprite always align top
+    -- 创建 Game 对象负责游戏逻辑部分处理
+    self.game_ = Game.new(self)
+
+    -- 创建一个精灵作为背景图. plist里的图片名字前加 # 区分
+    local bg = display.newSprite("#PlayLevelSceneBg.png") 
+    -- make background sprite always align top --设置背景图位置
     bg:setPosition(display.cx, display.top - bg:getContentSize().height / 2)
-    self:addChild(bg)
+    self:addChild(bg) -- 将背景图加载到场景默认图层 self 中。
 
     --初始化关卡数据
     self:init(levelIdx)
 
+    -- 例子里带的加载一张图片作为 Title。 不碍事，暂时留着
     local title = display.newSprite("#Title.png", display.left + 150, display.top - 50)
     title:setScale(0.5)
     self:addChild(title)
 
-    -- --显示上句
+    -- --调试用：显示上句
     -- self.labelup = cc.ui.UILabel.new({
     --     UILabelType = 2,
     --     text = "仄平平仄仄平仄",
@@ -37,7 +46,7 @@ function PlayScene:ctor(levelIdx)
     -- :align(display.CENTER, display.cx, display.top-200)
     -- self:addChild(self.labelup)
 
-    -- --显示下句 
+    -- --调试用：显示下句 
     -- self.labeldown = cc.ui.UILabel.new({
     --     UILabelType = 2,
     --     text = "仄仄平平仄仄平",
@@ -45,7 +54,7 @@ function PlayScene:ctor(levelIdx)
     -- :align(display.CENTER, display.cx, display.top-250)
     -- self:addChild(self.labeldown)
 
-    -- 炮台
+    -- 炮台,子弹(字)拖放上来。它就发射。(就是一个气泡按钮)
     self.emplacement = display.newScale9Sprite("wordBg.png")
     :setContentSize(cc.size(200, 200))
     :align(display.CENTER, display.cx, display.bottom + 200)
@@ -56,10 +65,10 @@ function PlayScene:ctor(levelIdx)
         :align(display.CENTER, 0, 0)
         )
 
-    -- 获取碰撞框
+    -- 获取炮台碰撞框
     self.emplacementBoundingBox = self.emplacement:getBoundingBox()
 
-    ----执行按钮
+    ----执行按钮(没用到，暂时留着)
     -- self.goButton = BubbleButton.new({
     --         image = "#MenuSceneStartButton.png",
     --         sound = GAME_SFX.tapButton,
@@ -74,16 +83,14 @@ function PlayScene:ctor(levelIdx)
     --     :addTo(self)
 
     --返回按钮
-    cc.ui.UIPushButton.new({normal = "#BackButton.png", pressed = "#BackButtonSelected.png"})
-        :align(display.LEFT_TOP, display.left +10 , display.top - 10)
+    cc.ui.UIPushButton.new({normal = "#LevelListsCellIndicator.png", pressed = "#LevelListsCellSelected.png"})
+        --:setButtonSize(20, 20)    --设置按钮大小
+        :align(display.LEFT_TOP, display.left +10 , display.top - 10) 
         :onButtonClicked(function()
-            audio.playSound(GAME_SFX.backButton)
-            app:enterChooseLevelScene()
-            print("ooooooooooooooooooooooooooooout ")
+            audio.playSound(GAME_SFX.backButton)    -- 播放音效
+            app:enterChooseLevelScene() -- 切换场景
         end)
         :addTo(self)
-
-        
 end
 
 function PlayScene:init(levelIdx)
@@ -92,67 +99,76 @@ function PlayScene:init(levelIdx)
     -- 创建显示诗句
     self:showPoetryUp()
 
-    -- 初始难度等级 （还未实现具体的难度等级控制。默认先用1级）
-    -- gLevel = 1
-
     -- 创建进度条显示
-    self:loadBar()
+    -- self:loadBar()
 end
 
--- 创建进度条显示,用于判别操作的 好坏程度
-function PlayScene:loadBar()
-    print("PlayScene:loadBar")
-    local loadBar = cc.ui.UILoadingBar.new({
-        scale9 = true,
-        capInsets = cc.rect(5,5,5,5), -- scale region
-        image =  "wordBg.png", -- loading bar image
-        viewRect = cc.rect(0,0,400,20), -- set loading bar rect
-        percent = 100, -- set loading bar percent
-        -- direction = DIRECTION_RIGHT_TO_LEFT
-        -- direction = DIRECTION_LEFT_TO_RIGHT -- default
-    })
-    :addTo(self)
-    :align(display.CENTER,display.cx , display.cy)
-end
+-- -- 创建进度条显示,用于判别操作的 好坏程度
+-- function PlayScene:loadBar()
+--     print("PlayScene:loadBar")
+--     local loadBar = cc.ui.UILoadingBar.new({
+--         scale9 = true,
+--         capInsets = cc.rect(5,5,5,5), -- scale region
+--         image =  "wordBg.png", -- loading bar image
+--         viewRect = cc.rect(0,0,20,20), -- set loading bar rect
+--         percent = 100, -- set loading bar percent
+--         -- direction = DIRECTION_RIGHT_TO_LEFT
+--         -- direction = DIRECTION_LEFT_TO_RIGHT -- default
+--     })
+--     :addTo(self)
+--     :align(display.CENTER,display.cx , display.cy)
+-- end
 
-function PlayScene:onLevelCompleted()
-    audio.playSound(GAME_SFX.levelCompleted)
+-- function PlayScene:onLevelCompleted()
+--     audio.playSound(GAME_SFX.levelCompleted)
 
-    local dialog = display.newSprite("#LevelCompletedDialogBg.png")
-    dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
-    self:addChild(dialog)
+--     local dialog = display.newSprite("#LevelCompletedDialogBg.png")
+--     dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
+--     self:addChild(dialog)
 
-    transition.moveTo(dialog, {time = 0.7, y = display.top - dialog:getContentSize().height / 2 - 40, easing = "BOUNCEOUT"})
-end
+--     transition.moveTo(dialog, {time = 0.7, y = display.top - dialog:getContentSize().height / 2 - 40, easing = "BOUNCEOUT"})
+-- end
+
 
 function PlayScene:onEnter()
-    self:setTouchEnabled(true)
-    :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
-        return self:onTouch(event, event.x, event.y)
-    end)
+    -- 监听 选择正确事件
+    self.game_:addEventListener(Game.CHOOSE_THE_CORRECT_WORD, 
+        handler(self, self.choose_the_correct_word))
+
+    -- 开启并监听触摸事件。
+    -- self:setTouchEnabled(true)
+    -- :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
+    --     return self:onTouch(event, event.x, event.y)
+    -- end)
+
+    -- -- 开启并监听触摸事件。
+    -- self:setTouchEnabled(true)
+    -- self:addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
+    --     return self.game_:onTouch(event)
+    -- end)
 end
 
--- 触摸相关事件
-function PlayScene:onTouchBegan(event,x, y)
-    --print("开始触摸：", x, y)
+-- -- 触摸相关事件
+-- function PlayScene:onTouchBegan(event,x, y)
+--     --print("开始触摸：", x, y)
  
-    -- local p = cc.p(x, y)
-    -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
-    --     self.state = "fireControlOn"
-    -- else
-    --     self.state = "fireControlOff"
-    -- end
-end
+--     -- local p = cc.p(x, y)
+--     -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
+--     --     self.state = "fireControlOn"
+--     -- else
+--     --     self.state = "fireControlOff"
+--     -- end
+-- end
 
-function PlayScene:onTouchMoved(event,x, y)
-    --print("触摸移动中：", x, y)
-    -- local p = cc.p(x, y)
-    -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
-    --     self.state = "fireControlOn"
-    -- else
-    --     self.state = "fireControlOff"
-    -- end
-end
+-- function PlayScene:onTouchMoved(event,x, y)
+--     --print("触摸移动中：", x, y)
+--     -- local p = cc.p(x, y)
+--     -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
+--     --     self.state = "fireControlOn"
+--     -- else
+--     --     self.state = "fireControlOff"
+--     -- end
+-- end
 
 function PlayScene:onTouchEnded(event,x, y)
     print("手指离开：", x, y)
@@ -204,23 +220,24 @@ function PlayScene:onTouchEnded(event,x, y)
     end
 end 
 
-function PlayScene:onTouch(event, x, y)
-    --local target = event:getCurrentTarget() 
-    -- print("event.getCurrentTarget():".. type(event.getCurrentTarget()))
-    if event.name == "began" then
-        --print(event, x, y)
-        self:onTouchBegan(event, x, y)
-        return true
-    elseif event.name == "moved" then
-        --print(event, x, y)
-        self:onTouchMoved(event, x, y)
-        return true
-    else--if event ~= "" then
-        --print(event, x, y)
-        self:onTouchEnded(event, x, y)
-        return true
-    end
-end
+-- 触摸事件
+-- function PlayScene:onTouch(event, x, y)
+--     --local target = event:getCurrentTarget() 
+--     -- print("event.getCurrentTarget():".. type(event.getCurrentTarget()))
+--     if event.name == "began" then
+--         --print(event, x, y)
+--         self:onTouchBegan(event, x, y)
+--         return true
+--     elseif event.name == "moved" then
+--         --print(event, x, y)
+--         self:onTouchMoved(event, x, y)
+--         return true
+--     else--if event ~= "" then
+--         --print(event, x, y)
+--         self:onTouchEnded(event, x, y)
+--         return true
+--     end
+-- end
 --------------=========================================================
 -- 显示上句
 function  PlayScene:showPoetryUp()
@@ -301,6 +318,8 @@ function  PlayScene:showPoetryUp()
     strLen = stringEx_len(peotry_word[2])
     OOXX_table_idx = mathEx_randNumArray(strLen) --创建一个随机数组，作为填空的索引
     OOXX_table_idx = tableEx_cut(OOXX_table_idx,gLevel) --根据难度级别留 N 个空格 
+    --dump(OOXX_table_idx,"OOXX_table_idx")
+    self.game_.set_OOXX_table_idx(OOXX_table_idx)--temp-----
 
     --逐字处理,要填的字改成空格
     for i=1,strLen do
@@ -385,9 +404,9 @@ function  PlayScene:showPoetryUp()
 
         --添加监听事件
         tempBtn:setTouchEnabled(true)
-        :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
+        tempBtn:addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
             event["tag"] = i --加个标签用来判断事件发送者
-            return self:onTouch(event, event.x, event.y)
+            return self.game_:onTouch(event)--self:onTouch(event, event.x, event.y)
         end)
 
         --self.pickGroup:addChild()
@@ -404,66 +423,73 @@ function  PlayScene:showPoetryUp()
 end
 --==============================================================================
 
--- 显示可选字
-function  PlayScene:showPoetryWord(peotry_str)
-
-end
-
-
--- 创建文字底框
+-- 创建文字(背景+文字)
 function PlayScene:createTxtBox(text,point)
-    -- 每个字的容器
-    -- local box1 = display.newNode()
-    local box1 = display.newNode()
+    -- 创建文字的容器(用来陈放 背景+文字)
+    local textBox = display.newNode()
     :setCascadeOpacityEnabled(true) --打开了子对象的透明度才受控制
+    :setPosition(point) -- 放置位置
 
-    -- 加入文字底图
+    -- 创建文字底图，加入容器
     local txtBg = display.newScale9Sprite("wordBg.png",txtBoxSize.width/2, txtBoxSize.height/2)
     :align(display.CENTER, 0, 0)
-    box1:addChild(txtBg)
-    txtBg:setContentSize(cc.size(txtBoxSize.width, txtBoxSize.height))
-    box1:setPosition(point)
+    :setContentSize(cc.size(txtBoxSize.width, txtBoxSize.height))
+    :addTo(textBox)-- 也可以用 textBox 的 addChild 来添加 textBox:addChild(txtBg)
 
-    -- 加入文字
+    -- 创建文字，加入容器
     local lab1 = display.newTTFLabel({text=text,color=c3,align=cc.ui.TEXT_ALIGN_CENTER,size=50})
     --lab1:setPosition(cc.p(txtBg:getContentSize().width/2,txtBg:getContentSize().height/2))
     :align(display.CENTER, 0, 0)
-    box1:addChild(lab1)
+    :addTo(textBox) -- 也可以用 textBox 的 addChild 来添加 textBox:addChild(lab1)
 
-    -- 加入测试点，显示锚点 0，0 位置
+    -- 加入测试点，显示锚点 0，0 位置，加入容器。 开发结束记得注释或删掉
     local anchor_point = cc.LayerColor:create(cc.c4b(0,0,0,255),5,5)
     :align(display.CENTER, 0, 0)
-    box1:addChild(anchor_point)
+    textBox:addChild(anchor_point)
 
-    return box1
+    -- 将容器返回。
+    return textBox
 end
 
--- 创建文字底框
-function animation_finished(text,point)
+function PlayScene:choose_the_correct_word(event)
+    print("----- choose_the_correct_word ----",
+        "\n事件名称：",event.name,
+        "\n是否正确：",event.type,
+        "\n正确位置：",event.value) 
 
+    -- local p1,p2,xx,yy
+    -- local n1 = self.downGroup:getChildren()[v]
+    -- local n2 = self.emplacement
+
+    -- -- 我也不知道这个偏移量是怎么产生的cc.p(84,20)
+    -- p1 = n1:convertToWorldSpace(cc.p(84,20)) 
+    -- p2 = n2:convertToNodeSpace(p1)
+
+    -- transition.moveTo(self.pickGroup:getChildren()[k], 
+    -- {
+    --     time = 3.2, 
+    --     delay = 0,
+    --     x = p2.x,
+    --     y = p2.y,
+    --     easing = "backout",
+    --     -- onComplete = function() print("容器动画，移到正确位置") end,
+    -- })
+
+    audio.playSound(GAME_SFX.tapButton) -- 播放音效
 end
-
 
 --/////////////////////////////////////////////////////////////////////////////
--- 生成要填的诗句。
-function make_poetry(poetry,level)
-    local level = level or 1
-    local poetry
-    local OOXX_table
-    OOXX_table = mathEx_randNumArray(level)
 
 
-    return poetry
-end
-
--- 生成一个 随机中文数组。
+-- 生成一个 随机中文数组。 strLen:数组长度
 function string_randChineseArray(strLen)
     -- -- 默认数组内容 1 个
     local strLen = strLen or 1
     local my_table = {}
-    local tempLen,rand_idx,tempStr    
+    local tempLen,rand_idx,tempStr
 
-    tempLen = stringEx_len(COMMON_CHINESE) -- 记得汉字不要用默认的 string.len 取出来不一样的
+    -- 要记得汉字不要用默认的 string.len 取出来不一样的
+    tempLen = stringEx_len(COMMON_CHINESE) 
 
     -- 随机播种子
     math.randomseed(tostring(os.time()):reverse():sub(1, 6))
@@ -475,19 +501,20 @@ function string_randChineseArray(strLen)
     end
 
     -- 查看排序后的结果
-     -- print("mathEx_randChineseArray")
-     -- tableEx_print(my_table)
+    -- print("mathEx_randChineseArray")
+    -- tableEx_print(my_table)
 
     return my_table
 end
 
--- 生成一个从 minN 到 maxN 的随机数字数组。
+-- 生成一个从 minN 到 maxN 的随机数字数组。minN 到 maxN 是随机范围
 function mathEx_randNumArray(maxN,minN)
     -- 默认数组内容 1 个
     local maxN = maxN or 1
     local minN = minN or 1
     local my_table = {}
-    print("--------------mathEx_randNumArray---------------",type(COMMON_CHINESE),COMMON_CHINESE[1])
+    --print("--------------mathEx_randNumArray---------------",type(COMMON_CHINESE),COMMON_CHINESE[1])
+
     -- --随机播种子
     math.randomseed(tostring(os.time()):reverse():sub(1, 6))
 
@@ -510,24 +537,7 @@ function mathEx_randNumArray(maxN,minN)
     return my_table
 end
 
--- 截取表。
-function tableEx_cut(my_table,tlen)
 
-    if not my_table then
-        error("用来截取的表是空的！")
-    end
-    local tempT = {}
-
-    for i=1,tlen do
-        tempT[i] = my_table[i]
-    end
-
-    --输出结果检查
-    tableEx_print(tempT)
-
-    return tempT
-
-end
 
 -- 中文字符串长度
 function stringEx_len(str)
@@ -536,7 +546,7 @@ function stringEx_len(str)
     return n
 end
 
--- 中文字符串截取
+-- 中文字符串截取 。 str：字符串,s：开始位置,e：结束位置
 function stringEx_sub(str,s,e)
     local s = s or 1   -- 未填写则默认为：1
     local e = e or s   -- 未填写则默认 end = start
@@ -547,157 +557,43 @@ function stringEx_sub(str,s,e)
 
 end
 
--- 中文字符串逐字转数组(因为中文字符串不能直接遍历)
-function stringEx_str2Array(str)
-    local my_table = {}
-    local len = string.len(str)    
-    for i=1,len,3 do
-        my_table[i] = str:sub(i, i + 2) -- lua文档要用 utf8 ，按中文宽设置偏移量
-    end
-    return my_table
-end
 
--- 中文字符串遍历
-function stringEx_iterator(str)
-    local my_table
-    local tempStr = str
-    local start = 1
-    function closureF()
-        print(str:sub(start, start + 2))        
-        start = start + 3
-    end
-    return closureF
-end
+-- -- 在下句中，选出要填的字。（个数与难度相关）
+-- function chooseSomeWord(my_table)
+--     -- --随机播种子
+--     math.randomseed(tostring(os.time()):reverse():sub(1, 6))  
 
--- 按 key 找值
-function tableEx_searchByKey(t, key)  
-    -- 遍历表 t
-    for k, v in pairs(t) do 
-        -- 如果是要找 key，把值返回
-        if k == key then
-            return v
-        end
+--     --打乱数组原本的顺序
+--     local randNumber
+--     for k, v in pairs(my_table) do
+--         randNumber = math.random(1,tableLen)--生成随机数
+--         --交换下标 i 与下标 randNumber 的内容
+--         my_table[k],my_table[randNumber] = my_table[i],my_table[randNumber]
+--     end
 
-        -- 如果值是一个"表" 
-        if (type(v) == "table") then 
-            tableEx_searchByKey(v, key) -- 递归调用  
-        end
-    end
+--     -- 查看排序后的结果
+--     for k, v in pairs(my_table) do
+--         print(k.." : "..v[1]..","..v[2])
+--     end  
 
-    return {李白={":你妹的啥也没有!"}}
-end  
+--     return my_table
+-- end
 
--- 递归遍历表，打印出内容
-function tableEx_print(t, i)  
-    local indent ="" -- i缩进，当前调用缩进 
-    local i = i or 0 -- 如果未进来，默认为 0
-    for j = 0, i do   
-        indent = indent .. "    " 
-    end  
-    for k, v in pairs(t) do   
-        if (type(v) == "table") then -- type(v) 当前类型时否table 如果是，则需要递归，  
-            print(indent .. "< " .. k .. " is a table />")  
-            tableEx_print(v, i + 1) -- 递归调用  
-            print(indent .. "/> end table ".. k .. "/>")  
-        else -- 否则直接输出当前值  
-                  
-            print(indent .. "<" .. k .. "=" .. v.."/>")  
-        end  
-    end  
-end  
+-- -- 取出诗句 (没用到，不知当时想的啥。过几天没事就删了吧)
+-- function getPoetry(my_table)
+-- -- local title = table.concat{tbl,":"}
+-- -- print("\n\n"..title.."\n\n")
+-- -- print("----------------------",table.concat(POETRY_ANTHOLOGY2["李白"], ":"))
+-- -- print(string.split(title, "/"))
+-- -- local poetry = table.concat{POETRY_ANTHOLOGY["李白"],","}
+-- print("----------------------",table.concat(POETRY_ANTHOLOGY["李白"], ""))
+-- print("----------------------",POETRY_ANTHOLOGY["李白"][1])
+-- -- print("poetry 是 ".. type(poetry)..poetry[1],poetry[2])
 
--- 对表进行随机排序
-function tableEx_randSort(my_table)
-    -- if (type(my_table) == "table") then
-    --     print("----------------传进来的是表！----------------")  
-    -- else
-    --     print("----------------传进来的是 >> "..my_table)  
-    -- end
-
-    -- --随机播种子
-    math.randomseed(tostring(os.time()):reverse():sub(1, 6))  
-    
-    local tempValue
-    local randNumber
-    local tableLen = table.maxn(my_table)
-
-    --填充数组
-    for i=1, tableLen do
-        randNumber = math.random(1,tableLen)--生成随机数
-
-        --将当前下标 i 的内容与随机数 randNumber 下标对应的内容交换
-        tempValue = my_table[randNumber]
-        my_table[randNumber] = my_table[i]
-        my_table[i] = tempValue
-  
-    end
-
-    -- 查看排序后的结果
-    --tableEx_print(my_table)
-
-    return my_table
-end
-
--- 在下句中，选出要填的字。（个数与难度相关）
-function chooseSomeWord(my_table)
-    -- --随机播种子
-    math.randomseed(tostring(os.time()):reverse():sub(1, 6))  
-
-    --打乱数组原本的顺序
-    local randNumber
-    for k, v in pairs(my_table) do
-        randNumber = math.random(1,tableLen)--生成随机数
-        --交换下标 i 与下标 randNumber 的内容
-        my_table[k],my_table[randNumber] = my_table[i],my_table[randNumber]
-    end
-
-    -- 查看排序后的结果
-    for k, v in pairs(my_table) do
-        print(k.." : "..v[1]..","..v[2])
-    end  
-
-    return my_table
-end
-
--- 取出诗句
-function getPoetry(my_table)
--- local title = table.concat{tbl,":"}
--- print("\n\n"..title.."\n\n")
--- print("----------------------",table.concat(POETRY_ANTHOLOGY2["李白"], ":"))
--- print(string.split(title, "/"))
--- local poetry = table.concat{POETRY_ANTHOLOGY["李白"],","}
-print("----------------------",table.concat(POETRY_ANTHOLOGY["李白"], ""))
-print("----------------------",POETRY_ANTHOLOGY["李白"][1])
--- print("poetry 是 ".. type(poetry)..poetry[1],poetry[2])
-
--- print("------------------",type(table.concat{POETRY_ANTHOLOGY["李白"],":"}))
---url转码
--- print(string.urlencode("人"))
--- print(string.urldecode("%E4%BA%BA"))
-end
-
--- 取出诗句
-function tableEx_Unfold(my_table, delimiter)
-    local delimiter = delimiter or "," -- 默认为逗号分隔
-    local tempStr = "" --临时变量用来存字符串
-
-    --tableEx_Unfold
-    for k, v in pairs(my_table) do
-        if (type(v[1]) == "table") then -- type(v) 当前类型时否table 
-        --如果是，则需要递归，  
-            tableEx_Unfold(v) -- 递归调用  
-        else -- 否则拼接字符串  
-            tempStr = tempStr..delimiter..table.concat(v, delimiter)   
-        end  
-    end
-
-    return tempStr
-end
-
-
-    -- POETRY_table = {}
-    -- POETRY_number = 1
-
-
+-- -- print("------------------",type(table.concat{POETRY_ANTHOLOGY["李白"],":"}))
+-- --url转码
+-- -- print(string.urlencode("人"))
+-- -- print(string.urldecode("%E4%BA%BA"))
+-- end
 
 return PlayScene

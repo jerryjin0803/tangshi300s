@@ -6,7 +6,7 @@ local AboutScene = class("AboutScene", function()
 end)
 
 function AboutScene:ctor()
-	self.bg = display.newSprite("#MenuSceneBg.png", display.cx, display.cy)
+	self.bg = display.newSprite("#OtherSceneBg.png", display.cx, display.cy)
     self:addChild(self.bg)
 
 	self.adBar = AdBar.new()
@@ -20,18 +20,19 @@ function AboutScene:ctor()
 
     --返回按钮
     cc.ui.UIPushButton.new({normal = "#BackButton.png", pressed = "#BackButtonSelected.png"})
-        :align(display.CENTER, display.left + 100, display.top - 120)
-        :onButtonClicked(function()
+        :align(display.LEFT_TOP, display.left + 0, display.top - 0)
+        :onButtonClicked(function(sender)
+            sender.target:setVisible(false) -- 先隐藏此按钮。这样切换的动画好看点
             audio.playSound(GAME_SFX.backButton)
             app:enterMainScene("slideInL")
         end)
         :addTo(self)
 end
 
-function AboutScene:onEnter()
-end
+-- function AboutScene:onEnter()
+-- end
 
-function AboutScene:onExit()
-end
+-- function AboutScene:onExit()
+-- end
 
 return AboutScene

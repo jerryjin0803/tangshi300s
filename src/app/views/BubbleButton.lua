@@ -8,6 +8,7 @@ function BubbleButton.new(params)
 
     params.listener = function(tag)
         if params.prepare then
+            --audio.playSound(params.sound)
             params.prepare()
         end
 

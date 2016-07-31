@@ -1,5 +1,5 @@
-local Levels = import("..data.Levels")
-local BubbleButton = import("..views.BubbleButton")
+local Levels = import("..data.Levels")-- 关卡等级数据，诗人诗句之类的
+local BubbleButton = import("..views.BubbleButton")-- 官方例子里的气泡按钮,正好用来当发炮效果
 
 local ChooseLevelScene = class("ChooseLevelScene", function()
     return display.newScene("ChooseLevelScene")
@@ -16,8 +16,6 @@ function ChooseLevelScene:ctor()
     bg:setPosition(display.cx, display.top - bg:getContentSize().height / 2)
     self:addChild(bg)
 
-    self:createPageView()
-
     --关卡名称
     self.LevelNamelabel = cc.ui.UILabel.new({
         UILabelType = 2,
@@ -26,14 +24,25 @@ function ChooseLevelScene:ctor()
     :align(display.CENTER, display.cx, display.top-150)
     self:addChild(self.LevelNamelabel)
 
-    --【开始游戏按钮】跳转到：简介场景
+    -- 创建选择关卡用的 PageView
+    self:createPageView()
+
+    --【开始游戏按钮】跳转到：游戏场景
     self.gameStartButton = BubbleButton.new({
             image = "#MenuSceneStartButton.png",
-            sound = GAME_SFX.tapButton,
+            -- sound = GAME_SFX.tapButton
             prepare = function()
+                -- 上面的sound 没用。 BubbleButton 里没有 audio.playSound(params.sound)
+                -- 想了想，还是不要动它，在这里播好了。
                 audio.playSound(GAME_SFX.tapButton)
             end,
-            listener = function()            
+            listener = function()       
+                --[[ 
+                这 app TMD是怎么来的。为什么 MyApp 类可以这样调用？
+                因为 MyApp 继承自 cc.mvc.AppBase 这个类。
+                它的构造函数最后一句是：app = self 一个全局变量
+                进入游戏场景，这里传入了关卡 ID
+                --]]
                 app:enterPlayScene(self.pv:getCurPageIdx())
             end,
         })
@@ -41,7 +50,7 @@ function ChooseLevelScene:ctor()
         :addTo(self)
 
         --返回按钮
-    cc.ui.UIPushButton.new("#BackButton.png")
+    cc.ui.UIPushButton.new({normal = "#LevelListsCellIndicator.png", pressed = "#LevelListsCellSelected.png"})
         :align(display.LEFT_TOP, display.left +10 , display.top - 10)
         :onButtonClicked(function()
             audio.playSound(GAME_SFX.backButton)
@@ -51,16 +60,16 @@ function ChooseLevelScene:ctor()
 
 end
 
--- 创建关卡
+-- 创建选择关卡用的 PageView
 function ChooseLevelScene:createPageView()
     --创建 UIPageView 用于装载关卡BOSS形象
     self.pv = cc.ui.UIPageView.new {
-            viewRect = cc.rect(40, 300, 560, 500),
-            column = 1, row = 1,
-            padding = {left = 20, right = 20, top = 20, bottom = 20},
-            columnSpace = 0, rowSpace = 0,
-            bCirc =true }
-        :onTouch(handler(self, self.touchListener))
+            viewRect = cc.rect(40, 300, 560, 500), -- 视图区域范围
+            column = 1, row = 1, -- 1行1列
+            padding = {left = 20, right = 20, top = 20, bottom = 20}, -- 上下左右的填充距离
+            columnSpace = 0, rowSpace = 0, -- 列间距，行间距
+            bCirc =true } -- 翻页到尽头循环
+        :onTouch(handler(self, self.touchListener)) --监听touch事件
         :addTo(self)
 
     -- add items
@@ -86,13 +95,18 @@ end
 
 -- 触控相应事件【翻页】
 function ChooseLevelScene:touchListener(event)
-    dump(event, "ChooseLevelScene - event:")
-    local listView = event.listView
-    if 3 == event.itemPos then
-        listView:removeItem(event.item, true)
-    else
-        -- event.item:setItemSize(120, 80)
-    end
+    -- dump(event, "ChooseLevelScene - event:")
+    --[[
+    20160731 下午三点注掉的。 全是nil 估计是前朝余孽。过几天没事，就删了算了。
+    -- local listView = event.listView
+    -- dump(event.listView, "event.listView:")
+    -- print("xxxxxxxxxxxxxxxxxxxxxx",event.itemPos)
+    -- if 3 == event.itemPos then
+    --     listView:removeItem(event.item, true)
+    -- else
+    --     -- event.item:setItemSize(120, 80)
+    -- end
+    --]]
 
     -- 翻页音效
     audio.playSound(GAME_SFX.voltiSound)
@@ -103,31 +117,11 @@ end
 
 --每当翻页，刷新数据
 function ChooseLevelScene:refresh(pageIdx)
-    --print("------------------当前页的id是： "..pageIdx)
+    -- print("------------------当前页的id是： "..pageIdx)
+    -- print("--------- BOSS "..self.pv:getCurPageIdx(),BOSS_LIST[pageIdx], "---------")
 
     -- 显示对应的BOSS名称
     self.LevelNamelabel:setString(BOSS_LIST[pageIdx])
-    print("--------- BOSS "..self.pv:getCurPageIdx(),BOSS_LIST[pageIdx], "---------")
---     用BOSS名称查找对应诗句
---     print_table(POETRY_DATA[BOSS_LIST[pageIdx]], 0)
-
---     随机显示BOSS的两句诗
---     for k, v in pairs(searchTableByKey(POETRY_DATA, BOSS_LIST[pageIdx])) do   
---         if (type(v) == "table") then
---             print(BOSS_LIST[pageIdx].." : "..v[1].." , "..v[2])  
---         end
---     end  
-
--- print("----------------",type((searchTableByKey(POETRY_DATA, BOSS_LIST[pageIdx]))))
-
---     print_table(
---         tableEx_randSort(
---                 searchTableByKey(POETRY_DATA, BOSS_LIST[pageIdx])
---             )
---         )
-
---     print(string.gsub(tableUnfold(POETRY_DATA,""),",",""))
---     print(string.len(tableUnfold(POETRY_DATA,"")))
 end
 
 return ChooseLevelScene

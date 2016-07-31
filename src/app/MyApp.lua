@@ -9,24 +9,29 @@ local MyApp = class("MyApp", cc.mvc.AppBase)
 
 function MyApp:ctor()
     MyApp.super.ctor(self)
-    self.objects_ = {}
+    --self.objects_ = {}
 end
 
 function MyApp:run()
+    -- 添加资源搜索的路径
     cc.FileUtils:getInstance():addSearchPath("res/")
+    -- 加载图集。 大写字母的这些是 config 里定义的全局变量
     display.addSpriteFrames(GAME_TEXTURE_DATA_FILENAME, GAME_TEXTURE_IMAGE_FILENAME)
 
-    -- preload all sounds
+    -- preload all sounds 
+    -- 预加载所有音效资源。但是这会造成开游戏前白屏卡顿几秒。应该改成异步才好
+    -- GAME_SFX 是 config 里定义的全局变量
     for k, v in pairs(GAME_SFX) do
         audio.preloadSound(v)
     end
 
+    -- 进入游戏主界面
     self:enterMainScene()
 end
 
 -- 进入游戏主界面
 function MyApp:enterMainScene(transitionType)
-    local transitionType = transitionType or "fade"
+    local transitionType = transitionType or "fade" -- 默认转场特效为淡入淡出 背景然为白色
     self:enterScene("MainScene", nil, transitionType, 0.6, display.COLOR_WHITE)
 end
 -- 进入选关界面
@@ -39,10 +44,12 @@ function MyApp:enterPlayScene(levelIndex)
 end
 -- 进入游戏玩法介绍界面
 function MyApp:enterGamesHelpScene()
+    -- 新场景从左边滑入。模拟翻页效果
     self:enterScene("GamesHelpScene", nil, "slideInL", 0.6)
 end
 -- 进入笨笨介绍界面
 function MyApp:enterAboutScene()
+    -- 新场景从右边滑入。模拟翻页效果
     self:enterScene("AboutScene", nil, "slideInR", 0.6)
 end
 
