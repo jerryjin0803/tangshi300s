@@ -8,6 +8,7 @@ end)
 
 function MainScene:ctor()
     -- 添加背景图
+    -- 在Quick中使用图片有个规则，如果使用的图片是以#开头的话表示是从SpriteFrameCache中读取。如果没有使用#开头的话表示是直接从文件读取。
     self.bg = display.newSprite("#MenuSceneBg.png", display.cx, display.cy):zorder(0)
     self:addChild(self.bg)
 

@@ -70,7 +70,7 @@ function tableEx_randSort(my_table)
     local tempValue
     local randNumber
     local tableLen = table.maxn(my_table)
-
+    local my_table = clone(my_table) -- 因为这个数组游戏过程中要动到。所以clone一个出来
     --填充数组
     for i=1, tableLen do
         randNumber = math.random(1,tableLen)--生成随机数

@@ -60,10 +60,19 @@ end
 
 -- 中文字符串逐字转数组(因为中文字符串不能直接遍历)
 function stringEx_str2Array(str)
+    -- local my_table = {}
+    -- local len = string.len(str)    
+    -- for i=1,len,3 do  -- 每个汉字占 3 字节，所以步长是 3 
+    --     my_table[i] = str:sub(i, i + 2) -- lua文档要用 utf8 ，按中文宽设置偏移量
+    -- end
+    -- return my_table
+
     local my_table = {}
-    local len = string.len(str)    
-    for i=1,len,3 do
-        my_table[i] = str:sub(i, i + 2) -- lua文档要用 utf8 ，按中文宽设置偏移量
+    -- 取出诗句字数
+    local strLen = stringEx_len(str)
+    -- 转成数组方便遍历替换元素
+    for i=1,strLen do
+        my_table[#my_table+1] = stringEx_sub(str,i,i)
     end
     return my_table
 end

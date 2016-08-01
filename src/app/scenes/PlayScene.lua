@@ -6,15 +6,14 @@ local Levels = import("..data.Levels") -- 关卡等级数据，诗人诗句之�
 local BubbleButton = import("..views.BubbleButton") -- 官方例子里的气泡按钮,正好用来当发炮效果
 local Game = import("..models.Game") -- 逻辑层
 
-local peotry_anthology_ --当前关卡所用诗句
-local peotry_word = {}  -- 整句诗从字符器拆成上下句，放到此数组中
-local OOXX_table_idx = {}--要填的字对应的索引
-local gLevel =2  --游戏难度。越高时，要填的空就越多。最多不超过全句
+-- local peotry_anthology_ --当前关卡所用诗句
+-- local peotry_word = {}  -- 整句诗从字符器拆成上下句，放到此数组中
+-- local OOXX_table_idx = {}--要填的字对应的索引
+-- local gLevel =2  --游戏难度。越高时，要填的空就越多。最多不超过全句
 local txtBoxSize = cc.size(60,80) -- 文本框大小
 local c1 = cc.c4b(150,200,190,200) -- 填充颜色值1
 local c2 = cc.c4b(100,100,50,200) -- 填充颜色值2
-local buttonBoundingBoxs = {}-- 用来存放正确答案的碰撞框。
-local number_successes = 0 -- 成功答题次数，用来判断是否答完。可继续下一句
+-- local number_successes = 0 -- 成功答题次数，用来判断是否答完。可继续下一句
 
 
 local PlayScene = class("PlayScene", function()
@@ -24,16 +23,21 @@ end)
 
 function PlayScene:ctor(levelIdx)
     -- 创建 Game 对象负责游戏逻辑部分处理
-    self.game_ = Game.new(self)
+    self.game_ = Game.new(self,levelIdx)
+
+    -- 创建个前景场层，用来显示弹窗类对象
+    PlayScene.FGLayer = display.newLayer()
+    :addTo(self, 1) -- 添加到当前场景，深度为 1
+    :setVisible(false) -- 默认关掉前景场。要用时再显示出来
+    --:setTouchEnabled(false) -- 因为是前景，所以关掉触摸
+
+    --PlayScene.BGLayer = display.newLayer():addTo(self, -1)
 
     -- 创建一个精灵作为背景图. plist里的图片名字前加 # 区分
     local bg = display.newSprite("#PlayLevelSceneBg.png") 
     -- make background sprite always align top --设置背景图位置
     bg:setPosition(display.cx, display.top - bg:getContentSize().height / 2)
     self:addChild(bg) -- 将背景图加载到场景默认图层 self 中。
-
-    --初始化关卡数据
-    self:init(levelIdx)
 
     -- 例子里带的加载一张图片作为 Title。 不碍事，暂时留着
     local title = display.newSprite("#Title.png", display.left + 150, display.top - 50)
@@ -93,6 +97,9 @@ function PlayScene:ctor(levelIdx)
             app:enterChooseLevelScene() -- 切换场景
         end)
         :addTo(self)
+
+    --初始化关卡数据
+    self:init(levelIdx)
 end
 
 function PlayScene:init(levelIdx)
@@ -105,82 +112,108 @@ function PlayScene:init(levelIdx)
     -- self:loadBar()
 end
 
--- function PlayScene:onLevelCompleted()
---     audio.playSound(GAME_SFX.levelCompleted)
-
---     local dialog = display.newSprite("#LevelCompletedDialogBg.png")
---     dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
---     self:addChild(dialog)
-
---     transition.moveTo(dialog, {time = 0.7, y = display.top - dialog:getContentSize().height / 2 - 40, easing = "BOUNCEOUT"})
--- end
-
-
 function PlayScene:onEnter()
     -- 监听事件，拖放文字到指定区域后放手触发
     self.game_:addEventListener(Game.CHOOSE_THE_WORD, 
         handler(self, self.onChooseTheWord))
-
+    -- 胜利事件，当前诗词库已空。过关
+    self.game_:addEventListener(Game.ON_LEVEL_COMPLETED, 
+        handler(self, self.onLevelCompleted))  
 end
 
---------------=========================================================
+--==============================  事件响应 ======================================
+-- 玩家选定一个文字放到指定区域后会触发此事件。
+function PlayScene:onChooseTheWord(event)
+    --[[
+    print("----- onChooseTheWord ----",
+        "\n事件名称：",event.name,
+        "\n是否正确：",event.yesOrNo,
+        "\n所选的字：",event.key,
+        "\n填空位置：",event.value) 
+    --]]
+    local p1,p2
+    local n1 = self.downGroup:getChildren()[event.value]
+    local n2 = self.emplacement
+
+    -- 如果正确，文字卡片飞向诗句中对应的位置。否则飞向屏幕中心对角色造成伤害。
+    if event.yesOrNo == "yes" then
+        -- 我也不知道这个偏移量是怎么产生的cc.p(84,20)。以后有空再查吧
+        p1 = n1:convertToWorldSpace(cc.p(84,20)) 
+        p2 = n2:convertToNodeSpace(p1)
+        -- 执行正确时的动画
+        self:wordAction(self.pickGroup:getChildren()[event.key], p2.x, p2.y)
+    else
+        p1 = cc.p(display.cx+84, display.cy+20) 
+        p2 = n2:convertToNodeSpace(p1)
+        -- 执行错误时的动画
+        self:wordAction(self.pickGroup:getChildren()[event.key], p2.x, p2.y)
+    end
+end
+
+-- 胜利过关
+function PlayScene:onLevelCompleted(event)
+    print("===============PlayScene:onLevelCompleted==============")
+    audio.playSound(GAME_SFX.levelCompleted)
+
+    --local dialog = display.newSprite("#LevelCompletedDialogBg.png")
+    local dialog = cc.ui.UIPushButton.new({normal = "#LevelCompletedDialogBg.png"})
+    dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
+    dialog:onButtonClicked(function()
+        audio.playSound(GAME_SFX.backButton)    -- 播放音效
+        app:enterChooseLevelScene() -- 切换场景
+    end)
+
+    PlayScene.FGLayer:setVisible(true) -- 前景层默认被我们关掉了，现在先把它显示出来
+    PlayScene.FGLayer:addChild(dialog) -- 弹窗放进前景层里
+    transition.moveTo(dialog, {time = 0.7, y = display.cy + dialog:getContentSize().height / 2 - 40, easing = "BOUNCEOUT"})
+end
+-- 挑战失败
+function PlayScene:onLevelFailure(event)
+    print("===============PlayScene:onLevelCompleted==============")
+    audio.playSound(GAME_SFX.levelCompleted)
+
+    --local dialog = display.newSprite("#LevelCompletedDialogBg.png")
+    local dialog = cc.ui.UIPushButton.new({normal = "#LevelCompletedDialogBg.png"})
+    dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 140)
+    dialog:onButtonClicked(function()
+        audio.playSound(GAME_SFX.backButton)    -- 播放音效
+        app:enterChooseLevelScene() -- 切换场景
+    end)
+
+    PlayScene.FGLayer:setVisible(true) -- 前景层默认被我们关掉了，现在先把它显示出来
+    PlayScene.FGLayer:addChild(dialog) -- 弹窗放进前景层里
+    transition.moveTo(dialog, {time = 0.7, y = display.cy + dialog:getContentSize().height / 2 - 40, easing = "BOUNCEOUT"})
+end
+---============================== 界面功能 ======================================
 -- 显示上句
-function  PlayScene:showPoetryUp()
+function PlayScene:showPoetryUp()
 
-    -- 从顶部弹出诗句待处理
-    local temp_str  --  遍历诗句时逐字操作时用的临时变量
-    local strLen --存放诗句字数的临时变量
     local xOffset,yOffset,xSpacing,ySpacing = 0,250,2,2 --文字显示的相关位置信息
-    
-
-    -- 如果此诗人的诗句表中还有，就取一句出来继续。否则就过关了
-	if(#peotry_anthology_>0) then
-        -- 取出一句拆成数组
-		peotry_word = string.split(table.remove(peotry_anthology_,1), ",")
-		print(peotry_word[1],peotry_word[2])
-	else
-		print("诗集已空！闯关成功！")
-	end
+    local WordUp, WordUp_Len = self.game_:getWordUp() -- 获取诗词的上句 和 字数
+    local WordDown, WordDown_Len = self.game_:getWordDown() -- 获取诗词的下句 和 字数
+    local WordPick, WordPick_Len = self.game_:getWordPick() -- 获取答案选项 和 字数
 
 	-- ======================显示上句=========================
-	--self.labelup:setString(peotry_word[1]) --调试时显示上句的label
-
     -- 先清除上一次用的诗句。type输出的结果是字符串所以要和"nil"对比。  
     -- 这种写法没有后面的好，浪费。但是我任性
     if ( type(self.upGroup) ~= "nil" ) then 
         self.upGroup:removeFromParent()
     end
 
-    -- 创建一个容器,用来放文字
-    self.upGroup = display.newNode()
-    --self.upGroup = cc.LayerColor:create(cc.c4b(c1.r,c1.g,c1.b,c1.a),500,100)
-
-    -- 取出诗句字数
-    strLen = stringEx_len(peotry_word[1])
-    --逐字处理,要填的字改成空格 
-    for i=1,strLen do
-        temp_str = stringEx_sub(peotry_word[1],i,i)
-        --print(temp_str)
-            --   self.upGroup:addChild(self:createTxtBox(temp_str,cc.p(
-            -- display.left + (txtBoxSize.width+2)*(i-1),
-            -- txtBoxSize.height)))  --display.top - 
-        self.upGroup:addChild(self:createTxtBox(temp_str,cc.p(
-            display.left + (txtBoxSize.width+ySpacing)*(i-1),
-            display.bottom
-            )))  --display.top - 
-    end
+    -- 创建诗句的文字卡牌，装在一个容器里。
+    self.upGroup = self:creatCardGroup(self.game_:getWordUp())
     self:addChild(self.upGroup)
 
     -- 将容器放置初始位置
     self.upGroup:pos(
-        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordUp_Len-1))/2+ySpacing,
         display.cy 
         )
+
     -- 容器动画，移到正确位置
     transition.moveTo(self.upGroup, 
     {
         time = .5, 
-        --x = xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
         y = display.top - yOffset,
         easing = "backout",
         onComplete = function() print("上句已出，请对下句！") end,
@@ -194,43 +227,15 @@ function  PlayScene:showPoetryUp()
         self.downGroup:removeFromParent()
     end
 
-    -- 创建一个容器,用来放文字
-    self.downGroup = display.newLayer() 
-    :setCascadeOpacityEnabled(true) --打开了子对象的透明度才受控制
-
+    -- 创建诗句的文字卡牌，装在一个容器里。
+    self.downGroup = self:creatCardGroup(self.game_:getWordDown())
+    --打开了子对象的透明度才受控制
+    self.downGroup:setCascadeOpacityEnabled(true) 
     self:addChild(self.downGroup)
-    -- 取出诗句字数
-    strLen = stringEx_len(peotry_word[2])
-    OOXX_table_idx = mathEx_randNumArray(strLen) --创建一个随机数组，作为填空的索引
-    OOXX_table_idx = tableEx_cut(OOXX_table_idx,gLevel) --根据难度级别留 N 个空格 
-    --dump(OOXX_table_idx,"OOXX_table_idx")
-    self.game_.set_OOXX_table_idx(OOXX_table_idx)--temp-----
 
-    --逐字处理,要填的字改成空格
-    for i=1,strLen do
-        temp_str = stringEx_sub(peotry_word[2],i,i)
-
-        -- 找出要留空的字，替换掉
-        for j=1,gLevel do
-            if i == OOXX_table_idx[j] then
-                --print("填空在：",v)
-                temp_str = "?"
-            end
-        end
-
-        -- 创建文字
-        self.downGroup:addChild(
-            self:createTxtBox(temp_str,cc.p(
-            display.left + (txtBoxSize.width+ySpacing)*(i-1),
-            display.bottom))
-            :setTag(i)
-            )
-    end
-    
     -- 将容器放置初始位置
     self.downGroup:pos(
-       -- xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
-        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordDown_Len-1))/2+ySpacing,
         display.top - yOffset - txtBoxSize.height - xSpacing 
         )
 
@@ -245,56 +250,18 @@ function  PlayScene:showPoetryUp()
     })
 
     -- ======================显示选词内容=========================
-    -- 答案选项的个数
-    strLen = 7
-    --随机汉字数字组,生成7个随机汉字的数组
-    local rand_str_array = stringEx_randChineseArray(strLen) 
-    for i=1,gLevel do
-        -- 把正确选项替换进来。后面在UI对显示位置做随机就可以了
-        rand_str_array[i] = stringEx_sub(peotry_word[2],OOXX_table_idx[i],OOXX_table_idx[i])
-    end
-
     -- 先清除上一题的答案
     if (self.pickGroup) then -- 只要不为 nil 就会执行清理
         self.pickGroup:removeFromParent()
     end
 
     -- 创建一个容器,用来放答案选项
-    self.pickGroup = display.newNode()
-    local tempBtn
-    --逐个创建答案选项 
-    for i=1,strLen do
-        temp_str = rand_str_array[i]
-        -- 创建按钮
-        tempBtn = self:createTxtBox(
-            temp_str,
-            cc.p(
-                    display.left + (txtBoxSize.width+ySpacing)*(i-1),
-                    display.bottom
-                )
-            )
-        cc(tempBtn):addComponent("components.ui.DraggableProtocol")
-        :exportMethods()
-        :setDraggableEnable(true)
-        -- 添加到容器中
-        self.pickGroup:addChild(tempBtn)
-        -- 碰撞框添加到数组中
-        table.insert(buttonBoundingBoxs,tempBtn:getBoundingBox())
-
-        --添加监听事件
-        tempBtn:setTouchEnabled(true)
-        tempBtn:addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
-            event["tag"] = i --加个标签用来判断事件发送者
-            return self.game_:onTouch(event) --self:onTouch(event, event.x, event.y)
-        end)
-
-        --self.pickGroup:addChild()
-    end
+    self.pickGroup = self:creatPickCardGroup(self.game_:getWordPick())
     self:addChild(self.pickGroup)
 
     -- 将容器放置初始位置
     self.pickGroup:pos(
-        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordPick_Len-1))/2+ySpacing,
         display.bottom + txtBoxSize.height
         )
 
@@ -329,36 +296,69 @@ function PlayScene:createTxtBox(text,point)
     return textBox
 end
 
--- 玩家选定一个文字放到指定区域后会触发此事件。
-function PlayScene:onChooseTheWord(event)
-    --[[print("----- onChooseTheWord ----",
-        "\n事件名称：",event.name,
-        "\n是否正确：",event.yesOrNo,
-        "\n所选的字：",event.key,
-        "\n填空位置：",event.value) 
-    --]]
+-- 创建诗句。 word_array：诗句字数组，每个元素就是一个字
+function PlayScene:creatCardGroup(word_array)
+    -- 创建一个容器,用来放文字
+    local cardGroup = display.newNode()
+    -- 存放诗句字数的临时变量
+    local strLen = #word_array -- stringEx_len(word_array)
+    --文字卡牌的相关位置信息
+    local xOffset,yOffset,xSpacing,ySpacing = 0,250,2,2 
 
-    local p1,p2
-    local n1 = self.downGroup:getChildren()[event.value]
-    local n2 = self.emplacement
-
-    -- 如果正确，文字卡片飞向诗句中对应的位置。否则飞向屏幕中心对角色造成伤害。
-    if event.yesOrNo == "yes" then
-        -- 我也不知道这个偏移量是怎么产生的cc.p(84,20)。以后有空再查吧
-        p1 = n1:convertToWorldSpace(cc.p(84,20)) 
-        p2 = n2:convertToNodeSpace(p1)
-        -- 执行正确时的动画
-        self:wordAction(self.pickGroup:getChildren()[event.key], p2.x, p2.y)
-    else
-        p1 = cc.p(display.cx+84, display.cy+20) 
-        p2 = n2:convertToNodeSpace(p1)
-        -- 执行错误时的动画
-        self:wordAction(self.pickGroup:getChildren()[event.key], p2.x, p2.y)
+    --逐字处理,要填的字改成空格 
+    for i=1,strLen do
+        -- temp_str = stringEx_sub(word_array, i, i)
+        -- temp_str = word_array[i]
+        self:createTxtBox(
+            -- stringEx_sub(word_array, i, i), -- 截取汉字
+            word_array[i], -- 截取汉字
+            cc.p(
+                 display.left + (txtBoxSize.width+ySpacing)*(i-1),
+                 display.bottom
+            )
+        ):addTo(cardGroup)
     end
-
-    
+    return cardGroup
 end
 
+-- 创建答案卡组。 word_array：随机汉字数组，每个元素就是一个字
+function PlayScene:creatPickCardGroup(word_array)
+    -- 创建一个容器,用来放文字
+    local cardGroup = display.newNode()
+    -- 临时变量
+    local tempBtn, temp_str
+
+    local rand_str_array = word_array
+
+    local strLen = #word_array
+        --文字卡牌的相关位置信息
+    local xOffset,yOffset,xSpacing,ySpacing = 0,250,2,2 
+
+    --逐个创建答案选项 
+    for i=1, strLen do
+        temp_str = rand_str_array[i]
+        -- 创建按钮
+        tempBtn = self:createTxtBox(
+            temp_str,
+            cc.p(
+                    display.left + (txtBoxSize.width+ySpacing)*(i-1),
+                    display.bottom
+                )
+            )
+        cc(tempBtn):addComponent("components.ui.DraggableProtocol"):exportMethods()
+        :setDraggableEnable(true)
+        -- 添加到容器中
+        cardGroup:addChild(tempBtn)
+
+        --添加监听事件
+        tempBtn:setTouchEnabled(true)
+        tempBtn:addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
+            event["tag"] = i --加个标签用来判断事件发送者
+            return self.game_:onTouch(event) -- self.game_ 负责处理该事件
+        end)
+    end
+    return cardGroup
+end
 
 -- 卡牌动画 
 function PlayScene:wordAction(wordCard, x, y)
