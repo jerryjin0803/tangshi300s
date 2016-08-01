@@ -46,6 +46,9 @@ GAME_CHARACTAR = {
 GAME_TEXTURE_DATA_FILENAME  = "AllSprites.plist"
 GAME_TEXTURE_IMAGE_FILENAME = "AllSprites.png"
 
+-- 图片资源名。放到这里好统一管理
+WORDCARDBG = "wordBg.png"
+
 -- 常用汉字库。游戏中用来生成随机汉字之类的。 调试用
 COMMON_CHINESE = "笨笨笨笨笨笨笨"
 

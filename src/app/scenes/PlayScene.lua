@@ -1,4 +1,6 @@
-require("app.models.TableEx") -- 对 table 的一些扩展功能
+require("app.models.MathEx") -- 对 math 数学库的一些扩展功能
+require("app.models.TableEx") -- 对 table 表的一些扩展功能
+require("app.models.StringEx") -- sting 字符串的一些扩展功能
 
 local Levels = import("..data.Levels") -- 关卡等级数据，诗人诗句之类的
 local BubbleButton = import("..views.BubbleButton") -- 官方例子里的气泡按钮,正好用来当发炮效果
@@ -103,22 +105,6 @@ function PlayScene:init(levelIdx)
     -- self:loadBar()
 end
 
--- -- 创建进度条显示,用于判别操作的 好坏程度
--- function PlayScene:loadBar()
---     print("PlayScene:loadBar")
---     local loadBar = cc.ui.UILoadingBar.new({
---         scale9 = true,
---         capInsets = cc.rect(5,5,5,5), -- scale region
---         image =  "wordBg.png", -- loading bar image
---         viewRect = cc.rect(0,0,20,20), -- set loading bar rect
---         percent = 100, -- set loading bar percent
---         -- direction = DIRECTION_RIGHT_TO_LEFT
---         -- direction = DIRECTION_LEFT_TO_RIGHT -- default
---     })
---     :addTo(self)
---     :align(display.CENTER,display.cx , display.cy)
--- end
-
 -- function PlayScene:onLevelCompleted()
 --     audio.playSound(GAME_SFX.levelCompleted)
 
@@ -131,113 +117,12 @@ end
 
 
 function PlayScene:onEnter()
-    -- 监听 选择正确事件
-    self.game_:addEventListener(Game.CHOOSE_THE_CORRECT_WORD, 
-        handler(self, self.choose_the_correct_word))
+    -- 监听事件，拖放文字到指定区域后放手触发
+    self.game_:addEventListener(Game.CHOOSE_THE_WORD, 
+        handler(self, self.onChooseTheWord))
 
-    -- 开启并监听触摸事件。
-    -- self:setTouchEnabled(true)
-    -- :addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
-    --     return self:onTouch(event, event.x, event.y)
-    -- end)
-
-    -- -- 开启并监听触摸事件。
-    -- self:setTouchEnabled(true)
-    -- self:addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
-    --     return self.game_:onTouch(event)
-    -- end)
 end
 
--- -- 触摸相关事件
--- function PlayScene:onTouchBegan(event,x, y)
---     --print("开始触摸：", x, y)
- 
---     -- local p = cc.p(x, y)
---     -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
---     --     self.state = "fireControlOn"
---     -- else
---     --     self.state = "fireControlOff"
---     -- end
--- end
-
--- function PlayScene:onTouchMoved(event,x, y)
---     --print("触摸移动中：", x, y)
---     -- local p = cc.p(x, y)
---     -- if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
---     --     self.state = "fireControlOn"
---     -- else
---     --     self.state = "fireControlOff"
---     -- end
--- end
-
-function PlayScene:onTouchEnded(event,x, y)
-    print("手指离开：", x, y)
-
-    local p = cc.p(x, y)
-    if cc.rectContainsPoint(self.emplacementBoundingBox, p) then
-       for k,v in pairs(OOXX_table_idx) do
-            if k == event["tag"] then
-
-                print(k,v)
-                --print("索引值:"..v ,"标签:"..event["tag"],"这是正确答案" )
-                transition.rotateTo(self.downGroup:getChildren()[v], {rotate = 360, time = 0.5})
-
-                local p1,p2,xx,yy
-                local n1 = self.downGroup:getChildren()[v]
-                local n2 = self.emplacement
-
-                -- 我也不知道这个偏移量是怎么产生的cc.p(84,20)
-                p1 = n1:convertToWorldSpace(cc.p(84,20)) 
-                p2 = n2:convertToNodeSpace(p1)
-
-            transition.moveTo(self.pickGroup:getChildren()[k], 
-            {
-                time = 3.2, 
-                delay = 0,
-                x = p2.x,
-                y = p2.y,
-                easing = "backout",
-                -- onComplete = function() print("容器动画，移到正确位置") end,
-            })
-            number_successes = number_successes + 1 --填对一字
-            end
-        end
-        audio.playSound(GAME_SFX.tapButton)
-        
-        -- 本句是否填完
-        if number_successes >= gLevel then  --不知为啥我就喜欢 >= 感觉完全点
-            number_successes = 0 -- 清空填对计数
-            --播放结束动画
-            transition.scaleTo(self.upGroup, 
-            {
-                time = .2, 
-                scale = 0.5,
-                easing = "BACKIN",
-                onComplete = function() self:showPoetryUp() end,-- 刷新下一句
-            })
-        end
-
-    end
-end 
-
--- 触摸事件
--- function PlayScene:onTouch(event, x, y)
---     --local target = event:getCurrentTarget() 
---     -- print("event.getCurrentTarget():".. type(event.getCurrentTarget()))
---     if event.name == "began" then
---         --print(event, x, y)
---         self:onTouchBegan(event, x, y)
---         return true
---     elseif event.name == "moved" then
---         --print(event, x, y)
---         self:onTouchMoved(event, x, y)
---         return true
---     else--if event ~= "" then
---         --print(event, x, y)
---         self:onTouchEnded(event, x, y)
---         return true
---     end
--- end
 --------------=========================================================
 -- 显示上句
 function  PlayScene:showPoetryUp()
@@ -300,7 +185,7 @@ function  PlayScene:showPoetryUp()
         easing = "backout",
         onComplete = function() print("上句已出，请对下句！") end,
     })
-        --x = xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
+
     -- ======================显示下句=========================
     --self.labeldown:setString(peotry_word[2]) --调试时显示下句的label
     
@@ -359,17 +244,11 @@ function  PlayScene:showPoetryUp()
         --onComplete = function() print("下句已出，请填空！") end,
     })
 
-    -- 下句转成数组方便操作
-    -- stringEx_str2Array(peotry_word[2])
-
-    -- self.word1 = self:createEquipmentBox("笨",cc.p(display.width/2/2-txtBoxSize.width/2,display.height/10*7))
-    -- self:addChild(self.word1)
-
     -- ======================显示选词内容=========================
     -- 答案选项的个数
     strLen = 7
     --随机汉字数字组,生成7个随机汉字的数组
-    local rand_str_array = string_randChineseArray(strLen) 
+    local rand_str_array = stringEx_randChineseArray(strLen) 
     for i=1,gLevel do
         -- 把正确选项替换进来。后面在UI对显示位置做随机就可以了
         rand_str_array[i] = stringEx_sub(peotry_word[2],OOXX_table_idx[i],OOXX_table_idx[i])
@@ -406,7 +285,7 @@ function  PlayScene:showPoetryUp()
         tempBtn:setTouchEnabled(true)
         tempBtn:addNodeEventListener(cc.NODE_TOUCH_EVENT, function(event)
             event["tag"] = i --加个标签用来判断事件发送者
-            return self.game_:onTouch(event)--self:onTouch(event, event.x, event.y)
+            return self.game_:onTouch(event) --self:onTouch(event, event.x, event.y)
         end)
 
         --self.pickGroup:addChild()
@@ -415,7 +294,6 @@ function  PlayScene:showPoetryUp()
 
     -- 将容器放置初始位置
     self.pickGroup:pos(
-        --xOffset + display.cx - ((txtBoxSize.width+ySpacing)*strLen)/2+ySpacing,
         xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(strLen-1))/2+ySpacing,
         display.bottom + txtBoxSize.height
         )
@@ -431,7 +309,7 @@ function PlayScene:createTxtBox(text,point)
     :setPosition(point) -- 放置位置
 
     -- 创建文字底图，加入容器
-    local txtBg = display.newScale9Sprite("wordBg.png",txtBoxSize.width/2, txtBoxSize.height/2)
+    local txtBg = display.newScale9Sprite(WORDCARDBG, txtBoxSize.width/2, txtBoxSize.height/2)
     :align(display.CENTER, 0, 0)
     :setContentSize(cc.size(txtBoxSize.width, txtBoxSize.height))
     :addTo(textBox)-- 也可以用 textBox 的 addChild 来添加 textBox:addChild(txtBg)
@@ -451,149 +329,76 @@ function PlayScene:createTxtBox(text,point)
     return textBox
 end
 
-function PlayScene:choose_the_correct_word(event)
-    print("----- choose_the_correct_word ----",
+-- 玩家选定一个文字放到指定区域后会触发此事件。
+function PlayScene:onChooseTheWord(event)
+    --[[print("----- onChooseTheWord ----",
         "\n事件名称：",event.name,
-        "\n是否正确：",event.type,
-        "\n正确位置：",event.value) 
+        "\n是否正确：",event.yesOrNo,
+        "\n所选的字：",event.key,
+        "\n填空位置：",event.value) 
+    --]]
 
-    -- local p1,p2,xx,yy
-    -- local n1 = self.downGroup:getChildren()[v]
-    -- local n2 = self.emplacement
+    local p1,p2
+    local n1 = self.downGroup:getChildren()[event.value]
+    local n2 = self.emplacement
 
-    -- -- 我也不知道这个偏移量是怎么产生的cc.p(84,20)
-    -- p1 = n1:convertToWorldSpace(cc.p(84,20)) 
-    -- p2 = n2:convertToNodeSpace(p1)
+    -- 如果正确，文字卡片飞向诗句中对应的位置。否则飞向屏幕中心对角色造成伤害。
+    if event.yesOrNo == "yes" then
+        -- 我也不知道这个偏移量是怎么产生的cc.p(84,20)。以后有空再查吧
+        p1 = n1:convertToWorldSpace(cc.p(84,20)) 
+        p2 = n2:convertToNodeSpace(p1)
+        -- 执行正确时的动画
+        self:wordAction(self.pickGroup:getChildren()[event.key], p2.x, p2.y)
+    else
+        p1 = cc.p(display.cx+84, display.cy+20) 
+        p2 = n2:convertToNodeSpace(p1)
+        -- 执行错误时的动画
+        self:wordAction(self.pickGroup:getChildren()[event.key], p2.x, p2.y)
+    end
 
-    -- transition.moveTo(self.pickGroup:getChildren()[k], 
-    -- {
-    --     time = 3.2, 
-    --     delay = 0,
-    --     x = p2.x,
-    --     y = p2.y,
-    --     easing = "backout",
-    --     -- onComplete = function() print("容器动画，移到正确位置") end,
-    -- })
-
-    audio.playSound(GAME_SFX.tapButton) -- 播放音效
-end
-
---/////////////////////////////////////////////////////////////////////////////
-
-
--- 生成一个 随机中文数组。 strLen:数组长度
-function string_randChineseArray(strLen)
-    -- -- 默认数组内容 1 个
-    local strLen = strLen or 1
-    local my_table = {}
-    local tempLen,rand_idx,tempStr
-
-    -- 要记得汉字不要用默认的 string.len 取出来不一样的
-    tempLen = stringEx_len(COMMON_CHINESE) 
-
-    -- 随机播种子
-    math.randomseed(tostring(os.time()):reverse():sub(1, 6))
     
-    -- 随机从字符串中取字
-    for i=1,strLen do
-        rand_idx = math.random(1,tempLen)
-        table.insert(my_table, i, stringEx_sub(COMMON_CHINESE,rand_idx,rand_idx))
-    end
-
-    -- 查看排序后的结果
-    -- print("mathEx_randChineseArray")
-    -- tableEx_print(my_table)
-
-    return my_table
-end
-
--- 生成一个从 minN 到 maxN 的随机数字数组。minN 到 maxN 是随机范围
-function mathEx_randNumArray(maxN,minN)
-    -- 默认数组内容 1 个
-    local maxN = maxN or 1
-    local minN = minN or 1
-    local my_table = {}
-    --print("--------------mathEx_randNumArray---------------",type(COMMON_CHINESE),COMMON_CHINESE[1])
-
-    -- --随机播种子
-    math.randomseed(tostring(os.time()):reverse():sub(1, 6))
-
-    --填充数组
-    for i = minN, maxN do
-        my_table[i] = i
-    end
-    
-    -- 打乱顺序
-    for i = minN, maxN do
-        randNumber = math.random(1,maxN)--生成随机数
-        --将当前下标 i 的内容与随机数 randNumber 下标对应的内容交换
-        my_table[randNumber],my_table[i] = my_table[i],my_table[randNumber]
-    end
-
-    -- 查看排序后的结果
-    --print("mathEx_randNumArray")
-    --tableEx_print(my_table)
-
-    return my_table
 end
 
 
+-- 卡牌动画 
+function PlayScene:wordAction(wordCard, x, y)
+    -- local animation = display.newAnimation(frames, 0.5 / 20) -- 0.5s play 20 frames
+    -- sprite:playAnimationForever(animation)
 
--- 中文字符串长度
-function stringEx_len(str)
-    --local m,n = string.gsub (str, "[^\128-\193]", '笨')
-    local m,n = str:gsub ("[^\128-\193]", '笨')
-    return n
+    -- 卡牌飞行动画
+    transition.moveTo(wordCard, 
+    {
+        time = .2, 
+        delay = 0,
+        x = x,
+        y = y,
+        easing = "backout",
+        onComplete = function() 
+
+            if self.game_.isRight() then -- 如果选对了
+                print("---------------恭喜选对了。")
+
+                if self.game_.isFinished() then -- 这句填完了
+                    print("+++++++++++++++++++++你这句填完了")
+                    self:showPoetryUp() 
+
+                    if self.game_.isVictory() then -- 通关了
+                        print("$$$$$$$$$$$$$$$$$$$$$$ 你通关了")
+                    end
+                end
+            else -- 否则(选错了)
+                print("--------xxxxxxxx-------坑货，你选错了。")
+
+                if self.game_.isFailed() then -- 已经失败了
+                    print("xxxxxxxxxxxxxxxxxxxxxxx 你挂了")
+                end
+            end
+        end,
+    })
+
+    -- 播放音效
+    audio.playSound(GAME_SFX.tapButton) 
+
 end
-
--- 中文字符串截取 。 str：字符串,s：开始位置,e：结束位置
-function stringEx_sub(str,s,e)
-    local s = s or 1   -- 未填写则默认为：1
-    local e = e or s   -- 未填写则默认 end = start
-    --str=str:gsub('([\001-\127])','\000%1')
-    str=str:sub(1+3*(s-1),3+3*(e-1)) -- 因为纯中文所以直接这样处理了
-    --str=str:gsub('\000','')
-    return str
-
-end
-
-
--- -- 在下句中，选出要填的字。（个数与难度相关）
--- function chooseSomeWord(my_table)
---     -- --随机播种子
---     math.randomseed(tostring(os.time()):reverse():sub(1, 6))  
-
---     --打乱数组原本的顺序
---     local randNumber
---     for k, v in pairs(my_table) do
---         randNumber = math.random(1,tableLen)--生成随机数
---         --交换下标 i 与下标 randNumber 的内容
---         my_table[k],my_table[randNumber] = my_table[i],my_table[randNumber]
---     end
-
---     -- 查看排序后的结果
---     for k, v in pairs(my_table) do
---         print(k.." : "..v[1]..","..v[2])
---     end  
-
---     return my_table
--- end
-
--- -- 取出诗句 (没用到，不知当时想的啥。过几天没事就删了吧)
--- function getPoetry(my_table)
--- -- local title = table.concat{tbl,":"}
--- -- print("\n\n"..title.."\n\n")
--- -- print("----------------------",table.concat(POETRY_ANTHOLOGY2["李白"], ":"))
--- -- print(string.split(title, "/"))
--- -- local poetry = table.concat{POETRY_ANTHOLOGY["李白"],","}
--- print("----------------------",table.concat(POETRY_ANTHOLOGY["李白"], ""))
--- print("----------------------",POETRY_ANTHOLOGY["李白"][1])
--- -- print("poetry 是 ".. type(poetry)..poetry[1],poetry[2])
-
--- -- print("------------------",type(table.concat{POETRY_ANTHOLOGY["李白"],":"}))
--- --url转码
--- -- print(string.urlencode("人"))
--- -- print(string.urldecode("%E4%BA%BA"))
--- end
 
 return PlayScene
