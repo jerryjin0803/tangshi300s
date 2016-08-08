@@ -31,3 +31,30 @@ function mathEx_randNumArray(maxN,minN)
 
     return my_table
 end
+
+--[[
+ 写的很 high 但其实 cocos2d 已经有实现了。也不知道我在写个毛。
+ cc.pGetAngle(self,other),cc.pGetDistance(startP,endP) 等等都有。
+--]]
+
+-- 计算两点间距离： 参数:点A的 x,y 坐标，点B的 x,y 坐标
+function mathEx_getDist(x1, y1, x2, y2)
+    local dx,dy = x1 - x2, y1 - y2
+    return math.sqrt(dx*dx + dy*dy)
+end
+
+-- 计算两点间距离： 参数:两个点
+function mathEx_getDistByPoint(p1, p2)
+    return mathEx_dist(p1.x,p1.y,p2.x,p2.y)
+end
+
+-- 计算两点间连线的角度
+function mathEx_getAngle(x1, y1, x2, y2)
+    return math.atan((y2-y1)/(x2-x1))
+end
+
+-- 计算两点间连线的角度 参数:两个点
+function mathEx_getAngleByPoint(p1, p2)
+    return mathEx_getAngle(p1.x, p1.y, p2.x, p2.y)
+end
+

@@ -28,7 +28,7 @@ function stringEx_randChineseArray(strLen)
     return my_table
 end
 
--- 中文字符串长度
+-- 中文字符串长度  -- 日了狗了竟然有这个函数 string.utf8len("你妹") 为啥还早点跳出来？还要我自己瞎搞半天
 function stringEx_len(str)
     --local m,n = string.gsub (str, "[^\128-\193]", '笨')
     local m,n = str:gsub ("[^\128-\193]", '笨')
