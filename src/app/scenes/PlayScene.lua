@@ -17,8 +17,8 @@ function PlayScene:ctor(levelIdx)
     -- 创建控制层对象
     self.control_ = PlayController.new(levelIdx)
 
-    -- 创建 playView 对象负责游戏显示部分
-    self.playView_ = PlayView.new(self.control_)
+    -- 创建 playView 对象负责游戏显示(文字卡部分)
+    self.playView_ = PlayView.new()
     self:addChild(self.playView_,1) -- 加入场景才会显示出来。
 
     -- 初始化 PlayController
@@ -43,6 +43,16 @@ function PlayScene:ctor(levelIdx)
     local title = display.newSprite("#Title.png", display.left + 150, display.top - 50)
     title:setScale(0.5)
     self:addChild(title)
+
+    --返回按钮
+    cc.ui.UIPushButton.new({normal = "#LevelListsCellIndicator.png", pressed = "#LevelListsCellSelected.png"})
+        --:setButtonSize(20, 20)    --设置按钮大小
+        :align(display.LEFT_TOP, display.left +10 , display.top - 10) 
+        :onButtonClicked(function()
+            audio.playSound(GAME_SFX.backButton)    -- 播放音效
+            app:enterChooseLevelScene() -- 切换场景
+        end)
+        :addTo(self)
 
 -- --调试用：显示上句
 -- self.labelup = cc.ui.UILabel.new({
@@ -89,18 +99,13 @@ function PlayScene:ctor(levelIdx)
 --     })
 --     :align(display.CENTER, display.cx, display.bottom + 200)
 --     :addTo(self)
-    --返回按钮
-    cc.ui.UIPushButton.new({normal = "#LevelListsCellIndicator.png", pressed = "#LevelListsCellSelected.png"})
-        --:setButtonSize(20, 20)    --设置按钮大小
-        :align(display.LEFT_TOP, display.left +10 , display.top - 10) 
-        :onButtonClicked(function()
-            audio.playSound(GAME_SFX.backButton)    -- 播放音效
-            app:enterChooseLevelScene() -- 切换场景
-        end)
-        :addTo(self)
-
     -- --初始化关卡数据
     -- self:init(levelIdx)
+end
+
+function PlayScene:onExit()
+    print("------------- PlayScene:onEnter() -------------")
+    audio.stopAllSounds()
 end
 
 return PlayScene

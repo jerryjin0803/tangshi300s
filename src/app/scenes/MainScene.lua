@@ -62,4 +62,7 @@ end
 -- function MainScene:onEnter()
 -- end
 
+-- function MainScene:onExit()
+-- end
+
 return MainScene

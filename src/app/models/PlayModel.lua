@@ -11,10 +11,11 @@ local PlayModel = class("PlayModel")
 local peotry_group_ --当前关卡所用诗句
 local peotry_Word -- 正在进行的整句
 local rand_str_array -- 随机汉字数字组,生成7个随机汉字的数组
-local OOXX_table_idx = {} --要填的字对应的索引
+local OOXX_table_idx = {} --要填的字在句中的索引位置
 local needWord_ --游戏难度。越高时，要填的空就越多。最多不超过全句 gLevel_
 local number_successes -- 成功填空次数，用来判断是否答完。
 local HP_ -- 诗人的血量。填错时会扣血。HP_ == 0 当前关卡就失败了。
+local oPosX, oPosY
 
 -- 状态类变量
 local finished_ -- 本句是否填完
@@ -27,7 +28,7 @@ PlayModel.CHOOSE_THE_WORD = "CHOOSE_THE_WORD"  -- 选定文字事件。
 PlayModel.ON_PEOTRY_DATA_READY = "ON_PEOTRY_DATA_READY"  -- 诗词数据已经准备好。
 PlayModel.ON_LEVEL_COMPLETED = "ON_LEVEL_COMPLETED"  -- 胜利事件，当前诗词库已空时表示过关。
 PlayModel.ON_LEVEL_FAILURE = "ON_LEVEL_FAILURE" -- 胜挑战失败 。
-PlayModel.CHOOSE_TOUCH_EVENT = "CHOOSE_TOUCH_EVENT" --   。
+PlayModel.CHOOSE_END_BACK_EVENT = "CHOOSE_END_BACK_EVENT" --   。
 
 -- 构造函数
 function PlayModel:ctor(stage, levelIdx)
@@ -61,10 +62,11 @@ end
 
 -- 触摸事件是由 PlayScene 触发的。交给 PlayModel 来处理。
 function PlayModel:onTouch(event, target)
-
+    --print("---------------- event.name ----------------",event.name)
     if event.name == "began" then
         --print("事件:" ,event.name, event.x, event.y)
         --self:onTouchBegan(event, x, y)
+        oPosX, oPosY = event.card:getPositionX(),event.card:getPositionY() --event.x, event.y
         return true
     elseif event.name == "moved" then
         --print("事件:" ,event.name, event.x, event.y)
@@ -74,6 +76,8 @@ function PlayModel:onTouch(event, target)
         --print("事件:" ,event.name, event.x, event.y)
         self:onTouchEnded(event,target)
         return true
+    elseif event.name == "cancelled" then
+        print("移出了屏幕，放后卡牌要飞回源处才行,后面再实现。模拟器上没反应，不知道是不是不支持")
     end
 end
 
@@ -88,18 +92,15 @@ function PlayModel:onTouchEnded(event, target)
    -- self.stage_.downGroup:getChildByName(event["tag"]),"getChildByName"
    -- dump(self.stage_.downGroup:getChildren()[1],"getChildByName")
     local p = cc.p(event.x,event.y)
-    local key_, value_ -- 所选的字的 index, 在对就诗句中的位置 index。
+    local value_ -- 所选的字的 index, 在对就诗句中的位置 index。
 
-    --if cc.rectContainsPoint(self.stage_.emplacementBoundingBox, p) then -- 在炮台区放手
-
-    if cc.rectContainsPoint(target, p) then -- 在炮台区放手
+    -- 在炮台区放手,则判断是否正确，并处理。否则，让卡牌回到原处
+    if cc.rectContainsPoint(target, p) then 
         -- 遍历正确答案数组，检查拖进来的文字是否正确
         for k,v in pairs(OOXX_table_idx) do 
-            key_, value_ = event["tag"], v
-
-            --如果所以选的字，是对的，执行以下操作:
-            print("--------------",stringEx_sub(peotry_Word[2],v,v) ,rand_str_array[event["tag"]] )
-            if stringEx_sub(peotry_Word[2],v,v) == rand_str_array[event["tag"]] then
+            value_ =  v
+            -- 空格位置的内容  ==  所选卡牌(上的字)
+            if stringEx_sub(peotry_Word[2],v,v) == event.text then
                 OOXX_table_idx[k] = "0" -- 已经填过的字，就从索引中移除掉。
                 chooseRight_ = true -- 选择结果是否正确
                 break -- 找到就不用继续了，直接跳出
@@ -129,12 +130,10 @@ function PlayModel:onTouchEnded(event, target)
         -- 选字完成，触发事件，相应场景会按规则刷新。(此例中 PlayScene 有监听此事件 )
         self:dispatchEvent({name = PlayModel.CHOOSE_THE_WORD, 
             chooseRight = chooseRight_, 
-            key = event["tag"],
             value = value_,
-            --passed = finished_
+            card = event.card
             })
 
-        print("---------- #peotry_group_ <= 0 and true or false -------------",#peotry_group_ <= 0 and true or false)
         -- 检查是否失败
         self:checkFailed()
         -- 如果本句完成，检查是否胜利
@@ -151,7 +150,13 @@ function PlayModel:onTouchEnded(event, target)
             -- 诗库中弹出一句放到变量中： local peotry_Word
             self:getPeotry() 
         end
-        
+    else -- 否则，卡牌未放到选定区，则让卡牌回到原处
+        print("------ event.card:getPosition() ---------",oPosX, oPosY )
+        self:dispatchEvent({name = PlayModel.CHOOSE_END_BACK_EVENT, 
+            card = event.card, 
+            x = oPosX,
+            y = oPosY
+        })
     end
 end 
 
@@ -249,6 +254,16 @@ function PlayModel:getPeotry()
     end
     return {"仄平平仄仄平仄","仄仄平平仄仄平"}
 end
+
+-- 暂时没用上
+-- -- set 控制层对象变量
+-- function PlayModel:setController(controller)
+--     self.controller_ = controller
+-- end
+-- -- get 控制层对象变量
+-- function PlayModel:getController()
+--     return self.controller_
+-- end
 
 return PlayModel
 

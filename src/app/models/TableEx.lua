@@ -66,6 +66,7 @@ function tableEx_randSort(my_table)
 
     -- --随机播种子
     math.randomseed(tostring(os.time()):reverse():sub(1, 6))  
+    print("tostring(os.time()):reverse():sub(1, 6)",tostring(os.time()):reverse())
     
     local tempValue
     local randNumber
