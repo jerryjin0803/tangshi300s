@@ -1,5 +1,6 @@
 local Levels = import("..data.Levels")-- 关卡等级数据，诗人诗句之类的
 local BubbleButton = import("..views.BubbleButton")-- 官方例子里的气泡按钮,正好用来当发炮效果
+local AdBar = import("..views.AdBar")
 
 local ChooseLevelScene = class("ChooseLevelScene", function()
     return display.newScene("ChooseLevelScene")
@@ -10,11 +11,14 @@ function ChooseLevelScene:ctor()
     cc.FileUtils:getInstance():addSearchPath("res/")
     cc.FileUtils:getInstance():addSearchPath("res/charactar/")
 
-    --设置界面背景
-    local bg = display.newSprite("#OtherSceneBg.png")
+    -- 创建一个精灵作为背景图. plist里的图片名字前加 # 区分(图片名统一放到 config 里去了)
+    local bg = display.newScale9Sprite(BACKGROUND, display.cx, display.cy, display.size)
     -- make background sprite always align top
     bg:setPosition(display.cx, display.top - bg:getContentSize().height / 2)
     self:addChild(bg)
+
+    self.adBar = AdBar.new()
+    self:addChild(self.adBar)
 
     --关卡名称
     self.LevelNamelabel = cc.ui.UILabel.new({
@@ -50,19 +54,21 @@ function ChooseLevelScene:ctor()
         :addTo(self)
 
         --返回按钮
-    cc.ui.UIPushButton.new({normal = "#LevelListsCellIndicator.png", pressed = "#LevelListsCellSelected.png"})
+    cc.ui.UIPushButton.new({normal = ARROWL, pressed = ARROWL_1})
         :align(display.LEFT_TOP, display.left +10 , display.top - 10)
         :onButtonClicked(function()
             audio.playSound(GAME_SFX.backButton)
             app:enterMainScene()
         end)
         :addTo(self)
+        -- 不透明度在指定时间内，从 0 到 70
+        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
 
 end
 
 -- 创建选择关卡用的 PageView
 function ChooseLevelScene:createPageView()
-    --创建 UIPageView 用于装载关卡BOSS形象
+    -- 创建 UIPageView 用于装载关卡BOSS形象
     self.pv = cc.ui.UIPageView.new {
             viewRect = cc.rect(40, 300, 560, 500), -- 视图区域范围
             column = 1, row = 1, -- 1行1列
@@ -72,8 +78,7 @@ function ChooseLevelScene:createPageView()
         :onTouch(handler(self, self.touchListener)) --监听touch事件
         :addTo(self)
 
-    -- add items
-    --加载所有关卡人物 —— BOSS形象
+    -- 创建 item (BOSS形象)。 加载所有关卡人物,到关卡列表。
     for k, v in ipairs(GAME_CHARACTAR) do
         --print("k:"..k.."v:"..v)
         local item = self.pv:newItem()
@@ -83,9 +88,9 @@ function ChooseLevelScene:createPageView()
         --print("图片坐标在：x[".. item:getPositionX() .."]y["..item:getPositionY().."]")
         --print("中心在："..display.cx .. "图片宽一半："..content:getContentSize().width/2)
         content:setPosition(display.cx - content:getContentSize().width/4, display.c_top/2)
-        item:addChild(content)  -- 添加关卡人物精灵到显示对象中
+        item:addChild(content)  -- 添加关卡人物精灵到 item 中
 
-        self.pv:addItem(item)  -- 添加显示对象到容器中      
+        self.pv:addItem(item)  -- 添加 item 到 UIPageView 中      
     end
     self.pv:reload() --刷新 UIPageView
 
@@ -96,17 +101,6 @@ end
 -- 触控相应事件【翻页】
 function ChooseLevelScene:touchListener(event)
     -- dump(event, "ChooseLevelScene - event:")
-    --[[
-    20160731 下午三点注掉的。 全是nil 估计是前朝余孽。过几天没事，就删了算了。
-    -- local listView = event.listView
-    -- dump(event.listView, "event.listView:")
-    -- print("xxxxxxxxxxxxxxxxxxxxxx",event.itemPos)
-    -- if 3 == event.itemPos then
-    --     listView:removeItem(event.item, true)
-    -- else
-    --     -- event.item:setItemSize(120, 80)
-    -- end
-    --]]
 
     -- 翻页音效
     audio.playSound(GAME_SFX.voltiSound)

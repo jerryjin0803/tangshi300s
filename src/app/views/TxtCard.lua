@@ -30,11 +30,6 @@ function TxtCard:ctor(text, txtBoxSize)
     :setName("labl")
     self:addChild(lab1) 
 
-    -- -- 加入测试点，显示锚点 0，0 位置，加入容器。 开发结束记得注释或删掉
-    -- local anchor_point = cc.LayerColor:create(cc.c4b(0,0,0,100),5,5)
-    -- :align(display.CENTER, 0, 0)
-    -- self:addChild(anchor_point)
-
     -- 给卡牌添加触摸事件
     self:addNodeEventListener(cc.NODE_TOUCH_EVENT, 
         function(event)
@@ -45,6 +40,12 @@ function TxtCard:ctor(text, txtBoxSize)
             return self.controller_:onTouch(event) -- 交给 controller 去处理
         end
     )
+
+    --[[ 加入测试点，显示锚点 0，0 位置，加入容器。 开发结束记得注释或删掉
+    local anchor_point = cc.LayerColor:create(cc.c4b(0,0,0,100),5,5)
+    :align(display.CENTER, 0, 0)
+    self:addChild(anchor_point)
+    --]]
 
 end
 
@@ -58,51 +59,3 @@ function TxtCard:getController()
 end
 
 return TxtCard
-
-
-
-
--- -- 构造函数
--- function TxtCard:ctor(text, point, txtBoxSize)
---     print("---------- text ---------",text)
---     assert(text, string.format("字都没有让我创建个毛啊，你传进来的什么鬼？", text))
-
---     -- 创建文字的容器
---     local textBox = self:createTxtCard(text,txtBoxSize)
---     self:addChild(textBox:getChildren())
---     textBox:setPosition(point) -- 调整位置
-
---     -- -- 将容器返回。
---     -- return textBox
--- end
-
--- -- 创建文字(背景+文字)
--- function TxtCard:createTxtCard(text,txtBoxSize)
-
---     local txtBoxSize = txtBoxSize  or cc.size(60,80) -- 文本框大小
---     -- 创建文字的容器(用来陈放 背景+文字)
---     local textBox = display.newNode()
---     :setCascadeOpacityEnabled(true) --打开了子对象的透明度才受控制
---     --:setPosition(point) -- 放置位置
-
---     -- 创建文字底图，加入容器
---     local txtBg = display.newScale9Sprite(WORDCARDBG, txtBoxSize.width/2, txtBoxSize.height/2)
---     :align(display.CENTER, 0, 0)
---     :setContentSize(cc.size(txtBoxSize.width, txtBoxSize.height))
---     :addTo(textBox)-- 也可以用 textBox 的 addChild 来添加 textBox:addChild(txtBg)
-
---     -- 创建文字，加入容器
---     local lab1 = display.newTTFLabel({text=text,color=c3,align=cc.ui.TEXT_ALIGN_CENTER,size=50})
---     --lab1:setPosition(cc.p(txtBg:getContentSize().width/2,txtBg:getContentSize().height/2))
---     :align(display.CENTER, 0, 0)
---     :addTo(textBox) -- 也可以用 textBox 的 addChild 来添加 textBox:addChild(lab1)
---     :setName("labl")
-
---     -- 加入测试点，显示锚点 0，0 位置，加入容器。 开发结束记得注释或删掉
---     local anchor_point = cc.LayerColor:create(cc.c4b(0,0,0,100),5,5)
---     :align(display.CENTER, 0, 0)
---     textBox:addChild(anchor_point)
-
---     -- 将容器返回。
---     return textBox
--- end

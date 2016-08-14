@@ -28,7 +28,7 @@ PlayModel.CHOOSE_THE_WORD = "CHOOSE_THE_WORD"  -- 选定文字事件。
 PlayModel.ON_PEOTRY_DATA_READY = "ON_PEOTRY_DATA_READY"  -- 诗词数据已经准备好。
 PlayModel.ON_LEVEL_COMPLETED = "ON_LEVEL_COMPLETED"  -- 胜利事件，当前诗词库已空时表示过关。
 PlayModel.ON_LEVEL_FAILURE = "ON_LEVEL_FAILURE" -- 胜挑战失败 。
-PlayModel.CHOOSE_END_BACK_EVENT = "CHOOSE_END_BACK_EVENT" --   。
+PlayModel.CHOOSE_END_BACK_EVENT = "CHOOSE_END_BACK_EVENT" -- 卡牌未拖到指定区域，要自动归位。
 
 -- 构造函数
 function PlayModel:ctor(stage, levelIdx)
@@ -44,28 +44,29 @@ function PlayModel:ctor(stage, levelIdx)
     -- 诗库中弹出一句放到变量中： local peotry_Word
     self:getPeotry()
 
-    -- 数据准备完成，开始游戏 (此例中 PlayScene 有监听此事件 )
+    -- 数据准备完成，开始游戏 (此例中 PlayController 在监听此事件 )
     self:dispatchEvent({name = PlayModel.ON_GAME_START})
 
 end
 
 function PlayModel:init(levelIdx)
     ------------------ 初始化数据 ---------------
-    --复制一份。因为使用时会有移除操作
+    --复制一份并随机排序。因为使用时会有移除操作
     peotry_group_ = tableEx_randSort(POETRY_ANTHOLOGY[BOSS_LIST[levelIdx]])
 
-    needWord_ = 2  --游戏难度。越高时，要填的空就越多。最多不超过全句 gLevel_
+    needWord_ = NEEDWORD or 1  --游戏难度。越高时，要填的空就越多。最多不超过全句 gLevel_
     number_successes = 0 -- 成功填空次数，用来判断是否答完。
     HP_ = 10 -- 诗人的血量。填错时会扣血。HP_ == 0 当前关卡就失败了。
     victory_ = false -- 胜利状态
 end
 
--- 触摸事件是由 PlayScene 触发的。交给 PlayModel 来处理。
+-- 触摸事件是由 PlayController 触发的。交给 PlayModel 来处理。
 function PlayModel:onTouch(event, target)
     --print("---------------- event.name ----------------",event.name)
     if event.name == "began" then
         --print("事件:" ,event.name, event.x, event.y)
         --self:onTouchBegan(event, x, y)
+        -- 保存初始位置
         oPosX, oPosY = event.card:getPositionX(),event.card:getPositionY() --event.x, event.y
         return true
     elseif event.name == "moved" then
@@ -120,34 +121,34 @@ function PlayModel:onTouchEnded(event, target)
 
         -- 判断是否已经过关。(所有的空都填好了，就是过关)
         -- 如果成功填完就更新 finished_ 状态。并准备下一句的数据，以便显示层处理完动画后，显示下一句
-        if number_successes >= needWord_ then
-            finished_ = true  -- 状态 为本句完成
+        if number_successes >= math.min( needWord_, #peotry_Word) then -- 需填字数一定小于全句字数.
+            finished_ = true  -- 状态 本句完成
             number_successes = 0 -- 清空计数器
         else
             finished_ = false  -- 状态 本句尚未完成
         end
 
-        -- 选字完成，触发事件，相应场景会按规则刷新。(此例中 PlayScene 有监听此事件 )
+        -- 选字完成，触发事件，相应场景会按规则刷新。(此例中 PlayController 在监听此事件 )
         self:dispatchEvent({name = PlayModel.CHOOSE_THE_WORD, 
-            chooseRight = chooseRight_, 
-            value = value_,
-            card = event.card
+            chooseRight = chooseRight_,  -- 本次有没有选对。
+            value = value_, -- 卡牌上的字
+            card = event.card  -- 被拖拽的卡牌对象
             })
 
-        -- 检查是否失败
+        -- 检查是否失败。如果失败触发事件
         self:checkFailed()
-        -- 如果本句完成，检查是否胜利
+
+        -- 如果本句完成。
         if self.isFinished() then
-            
             -- 如果本句完成，并且诗词库已空。 这句一定要放到 self:getPeotry() 前面。
-            -- 判断完后再 self:getPeotry() 因为它要从 peotry_group_ 数组弹出诗句
+            -- 因为 self:getPeotry() 会从 peotry_group_ 数组弹出诗句
             if #peotry_group_ <= 0 and true or false then
                 victory_ = true
             end
-            -- 检查是否胜利
+            -- 检查是否胜利, 如果胜利触发事件。(如果就不会执行到下一句了)
             self:checkVictory()
 
-            -- 诗库中弹出一句放到变量中： local peotry_Word
+            -- 诗库中弹出一句放到变量中： local peotry_Word 
             self:getPeotry() 
         end
     else -- 否则，卡牌未放到选定区，则让卡牌回到原处
@@ -188,7 +189,7 @@ end
 -- 判断是否胜利过关
 function PlayModel:checkVictory()
     if self.isVictory() then
-        -- 胜利事件 (此例中 PlayScene 有监听此事件 )
+        -- 胜利事件 (此例中 PlayController 有监听此事件 )
         self:dispatchEvent({name = PlayModel.ON_LEVEL_COMPLETED})
     end
     return self.isVictory()
@@ -197,7 +198,7 @@ end
 -- 判断是否挑战失败
 function PlayModel:checkFailed()
     if self.isFailed() then
-        -- 失败事件 (此例中 PlayScene 有监听此事件 )
+        -- 失败事件 (此例中 PlayController 有监听此事件 )
         self:dispatchEvent({name = PlayModel.ON_LEVEL_FAILURE})
     end
     return HP_ <= 0

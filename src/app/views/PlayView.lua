@@ -3,17 +3,10 @@
 --]]
 
 require("app.models.MathEx") -- 对 math 数学库的一些扩展功能
-require("app.models.TableEx") -- 对 table 表的一些扩展功能
-require("app.models.StringEx") -- sting 字符串的一些扩展功能
 
-local Levels = import("..data.Levels") -- 关卡等级数据，诗人诗句之类的
 local TxtCard = import("..views.TxtCard") -- 每一个字就是一张卡牌
-local PlayModel = import("..models.PlayModel") -- 逻辑层
-
 
 local txtBoxSize = cc.size(60,80) -- 文本框大小
-local c1 = cc.c4b(150,200,190,200) -- 填充颜色值1
-local c2 = cc.c4b(100,100,50,200) -- 填充颜色值2
 
 local PlayView = class("PlayView", function()
     return display.newLayer()
@@ -38,10 +31,12 @@ function PlayView:ctor()
     :align(display.CENTER, display.cx, display.bottom + 220)
     :addTo(self)    
     :setOpacity(80)
-    :addChild(-- 加入测试点，显示锚点 0，0 位置
+    --[[ 加入测试点，显示锚点 0，0 位置
+    :addChild(
         cc.LayerColor:create(cc.c4b(0,0,0,255),5,5)
         :align(display.CENTER, 0, 0)
         )
+    --]]
 
     -- 获取炮台碰撞框
     self.emplacementBoundingBox_ = self.emplacement_:getBoundingBox()
@@ -50,7 +45,7 @@ end
 
 -- 玩家选定一个文字放到指定区域后会触发此事件。
 function PlayView:onChooseTheWord(event)
-    ---[[
+    --[[
     print("----- onChooseTheWord ----",
         "\n事件名称：",event.name,
         "\n是否正确：",event.chooseRight,
@@ -85,7 +80,7 @@ function PlayView:onLevelCompleted(event)
     print("===============PlayView:onLevelCompleted==============")
     audio.playSound(GAME_SFX.levelCompleted)
 
-    --local dialog = display.newSprite("#LevelCompletedDialogBg.png")
+    --创建并显示 胜利UI 。点击回到选关界面
     local dialog = cc.ui.UIPushButton.new({normal = "#LevelCompletedDialogBg.png"})
     dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
     dialog:onButtonClicked(function()
@@ -102,7 +97,7 @@ function PlayView:onLevelFailure(event)
     print("xxxxxxxxxxxxxxxx=PlayView:onLevelFailure=xxxxxxxxxxxxxx")
     audio.playSound(GAME_SFX.levelCompleted)
 
-    --local dialog = display.newSprite("#LevelCompletedDialogBg.png")
+    --创建并显示 失败UI 。点击回到选关界面
     local dialog = cc.ui.UIPushButton.new({normal = "#LevelCompletedDialogBg.png"})
     dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
     dialog:onButtonClicked(function()
@@ -112,7 +107,7 @@ function PlayView:onLevelFailure(event)
 
     PlayView.FGLayer:setVisible(true) -- 前景层默认被我们关掉了，现在先把它显示出来
     PlayView.FGLayer:addChild(dialog) -- 弹窗放进前景层里
-    dialog:rotation(180)
+    dialog:rotation(180) -- 测试时用的
     transition.moveTo(dialog, {time = 0.7, y = display.cy + dialog:getContentSize().height / 2 + 40, easing = "BOUNCEOUT"})
 end
 
@@ -193,8 +188,9 @@ function PlayView:onPeotryDataReady(WordUp, WordDown, WordPick)
     self:addChild(self.pickGroup)
     self.pickGroup:setName("pickGroup")
 
-    -- 打乱卡牌的摆放位置
-    -- self:randChildrenPosition(self.pickGroup)
+    --[[ 打乱卡牌的摆放位置
+        self:randChildrenPosition(self.pickGroup)
+    --]]
 
     -- 将容器放置初始位置
     self.pickGroup:pos(
@@ -320,22 +316,23 @@ function PlayView:wordActionBack(event)
     })
 end
 
--- 打乱卡牌的摆放位置 (随机效果不好)
--- function PlayView:randChildrenPosition(obj)
---     print("-----obj:getChildrenCount()---------",obj:getChildrenCount())
---     local childrenCount = obj:getChildrenCount()
---     local objChildren = obj:getChildren()
---     local randPos = tableEx_randSort(mathEx_randNumArray(childrenCount))
+--[[ 打乱卡牌的摆放位置 (随机效果不好)
+function PlayView:randChildrenPosition(obj)
+    print("-----obj:getChildrenCount()---------",obj:getChildrenCount())
+    local childrenCount = obj:getChildrenCount()
+    local objChildren = obj:getChildren()
+    local randPos = tableEx_randSort(mathEx_randNumArray(childrenCount))
 
---     -- 打乱位置 
---     for i=1, childrenCount do 
---         print("---- 随机位置 ----",randPos[i])
---         -- print("-----随机位置---------",objChildren[randPos[i]]:getPosition(),randPos[i])
---         local p1, p2 = objChildren[i]:getPositionX(),objChildren[randPos[i]]:getPositionX()
---         objChildren[i]:setPositionX(p2)
---         objChildren[randPos[i]]:setPositionX(p1)
---     end
--- end
+    -- 打乱位置 
+    for i=1, childrenCount do 
+        print("---- 随机位置 ----",randPos[i])
+        print("-----随机位置---------",objChildren[ randPos[i] ]:getPosition(),randPos[i])
+        local p1, p2 = objChildren[i]:getPositionX(),objChildren[ randPos[i] ]:getPositionX()
+        objChildren[i]:setPositionX(p2)
+        objChildren[ randPos[i] ]:setPositionX(p1)
+    end
+end
+--]]
 
 -- 获取炮台的碰撞框 
 function PlayView:getEmplacement()
@@ -352,102 +349,3 @@ function PlayView:getController()
 end
 
 return PlayView
-
-
--- -- 创建答案卡组。 word_array：随机汉字数组，每个元素就是一个字
--- function PlayView:creatPickCardGroup(word_array)
---     -- 创建一个容器,用来放文字
---     local cardGroup = display.newNode()
---     -- 临时变量
---     local tempBtn
-
---     local strLen = #word_array
---     -- 文字卡牌的相关位置信息
---     local xOffset,yOffset,xSpacing,ySpacing = 0,0,2,2 
---     -- 生成排序的随机索引,在创建卡牌时，读这个索引，就实现了随机打乱卡牌顺序
---     local randPos = mathEx_randNumArray(strLen)
-
---     --逐个创建答案选项 
---     for i=1, strLen do 
---         -- 创建按钮
---         tempBtn = self:createTxtCard(
---             word_array[i],
---             cc.p(
---                     display.left + (txtBoxSize.width+ySpacing)*(randPos[i]-1),
---                     display.bottom
---                 ),
---             txtBoxSize
---             )
-
---         cc(tempBtn):addComponent("components.ui.DraggableProtocol"):exportMethods()
---         :setDraggableEnable(true)
-
---         -- 添加到容器中
---         cardGroup:addChild(tempBtn)
---         tempBtn:setName(i)
-
---         local cards = {}
---         --添加监听事件
---         tempBtn:setTouchEnabled(true)
---         tempBtn:addNodeEventListener(cc.NODE_TOUCH_EVENT, 
---             function(event)
---                 event["tag"] = i --加个标签用来判断事件发送者
---                 event.card = cardGroup:getChildren()[i] 
---                 -- -- event:setName(i) --事件有自己的特定名字。改了估计会出翔
---                 -- return self.controller_:onTouch(event) -- self.controller_ 负责处理该事件
-
---                 -- 用 tag 存索引，再把 card 的容器 cardGroup 一起传过去。
---                 -- cardGroup:getChildren()[event["tag"]]  这样就可以取到触发事件的卡牌了
---                 --:getChildByName("labl"):getString() 继续深入最终拿卡牌上的 labl 文字内容
---                 return self.controller_:onTouch(event,cardGroup)
---             end
---         )
---     end
---     return cardGroup
--- end
-
-
--- -- 创建答案卡组。 word_array：随机汉字数组，每个元素就是一个字
--- function PlayView:creatPickCardGroup(word_array)
---     -- 创建一个容器,用来放文字
---     local cardGroup = display.newNode()
---     -- 临时变量
---     local tempBtn, temp_str
-
---     local rand_str_array = word_array
-
---     local strLen = #word_array
---     -- 文字卡牌的相关位置信息
---     local xOffset,yOffset,xSpacing,ySpacing = 0,0,2,2 
---     -- 生成排序的随机索引,在创建卡牌时，读这个索引，就实现了随机打乱卡牌顺序
---     local randPos = mathEx_randNumArray(strLen)
-
---     --逐个创建答案选项 
---     for i=1, strLen do
---         temp_str = rand_str_array[i]
---         -- 创建按钮
---         tempBtn = self:createTxtCard(
---             temp_str,
---             cc.p(
---                     display.left + (txtBoxSize.width+ySpacing)*(i-1),--(randPos[i]-1),
---                     display.bottom
---                 )
---             )
---         cc(tempBtn):addComponent("components.ui.DraggableProtocol"):exportMethods()
-        
---         :setDraggableEnable(true)
---         -- 添加到容器中
---         cardGroup:addChild(tempBtn)
---         tempBtn:setName(i)
---         --添加监听事件
---         tempBtn:setTouchEnabled(true)
---         tempBtn:addNodeEventListener(cc.NODE_TOUCH_EVENT, 
---             function(event)
---                 event["tag"] = i --加个标签用来判断事件发送者
---                 -- event:setName(i) --加个标签用来判断事件发送者
---                 return self.controller_:onTouch(event,tempBtn) -- self.controller_ 负责处理该事件
---             end
---         )
---     end
---     return cardGroup
--- end

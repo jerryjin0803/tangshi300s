@@ -1,3 +1,6 @@
+--[[
+    帮助 界面，在主界面左侧
+--]]
 
 local AdBar = import("..views.AdBar")
 
@@ -6,7 +9,8 @@ local GamesHelpScene = class("GamesHelpScene", function()
 end)
 
 function GamesHelpScene:ctor()
-    self.bg = display.newSprite("#OtherSceneBg.png", display.cx, display.cy)
+    -- 创建一个精灵作为背景图. plist里的图片名字前加 # 区分(图片名统一放到 config 里去了)
+    self.bg = display.newScale9Sprite(BACKGROUND, display.cx, display.cy,display.size)
     self:addChild(self.bg)
 
     self.adBar = AdBar.new()
@@ -19,7 +23,7 @@ function GamesHelpScene:ctor()
         :addTo(self)
 
     --返回按钮
-    cc.ui.UIPushButton.new({normal = "#BackButton.png", pressed = "#BackButtonSelected.png"})
+    cc.ui.UIPushButton.new({normal = ARROWR, pressed = ARROWR_1})
         :align(display.RIGHT_TOP, display.right - 0, display.top - 0)
         :onButtonClicked(function(sender)
             sender.target:setVisible(false) -- 先隐藏此按钮。这样切换的动画好看点
@@ -27,6 +31,8 @@ function GamesHelpScene:ctor()
             app:enterMainScene("slideInR")
         end)
         :addTo(self)
+        -- 不透明度在指定时间内，从 0 到 70
+        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
 end
 
 -- function AboutScene:onEnter()

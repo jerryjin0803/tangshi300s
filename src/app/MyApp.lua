@@ -30,25 +30,25 @@ end
 -- 进入游戏主界面
 function MyApp:enterMainScene(transitionType)
     local transitionType = transitionType or "fade" -- 默认转场特效为淡入淡出 背景然为白色
-    self:enterScene("MainScene", nil, transitionType, 0.6, display.COLOR_WHITE)
+    self:enterScene("MainScene", nil, transitionType, SceneTransitionTime, display.COLOR_WHITE)
 end
 -- 进入选关界面
 function MyApp:enterChooseLevelScene()
-    self:enterScene("ChooseLevelScene", nil, "fade", 0.6, display.COLOR_WHITE)
+    self:enterScene("ChooseLevelScene", nil, "fade", SceneTransitionTime, display.COLOR_WHITE)
 end
 -- 进入游戏场景界面。这里的重点是进入界面时的传参方法
 function MyApp:enterPlayScene(levelIndex)
-    self:enterScene("PlayScene", {levelIndex}, "fade", 0.6, display.COLOR_WHITE)
+    self:enterScene("PlayScene", {levelIndex}, "fade", SceneTransitionTime, display.COLOR_WHITE)
 end
 -- 进入游戏玩法介绍界面
 function MyApp:enterGamesHelpScene()
     -- 新场景从左边滑入。模拟翻页效果
-    self:enterScene("GamesHelpScene", nil, "slideInL", 0.6)
+    self:enterScene("GamesHelpScene", nil, "slideInL", SceneTransitionTime)
 end
 -- 进入笨笨介绍界面
 function MyApp:enterAboutScene()
     -- 新场景从右边滑入。模拟翻页效果
-    self:enterScene("AboutScene", nil, "slideInR", 0.6)
+    self:enterScene("AboutScene", nil, "slideInR", SceneTransitionTime)
 end
 
 -- appInstance = MyApp

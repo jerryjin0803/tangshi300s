@@ -1,6 +1,9 @@
 
 local Levels = {}
 
+-- 游戏难度。越高时，要填的空就越多。默认要填 2 个字。
+NEEDWORD = 2
+
 -- charactar
 BOSS_LIST = {
     "李白","杜甫","白居易","李商隐","测试"

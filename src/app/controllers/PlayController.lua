@@ -6,21 +6,17 @@ require("app.models.MathEx") -- 对 math 数学库的一些扩展功能
 require("app.models.TableEx") -- 对 table 表的一些扩展功能
 require("app.models.StringEx") -- sting 字符串的一些扩展功能
 
--- local Levels = import("..data.Levels") -- 关卡等级数据，诗人诗句之类的
--- local BubbleButton = import("..views.BubbleButton") -- 官方例子里的气泡按钮,正好用来当发炮效果
 local PlayModel = import("..models.PlayModel") -- 逻辑层
-
 local PlayController = class("PlayController")
 
-
 function PlayController:ctor(levelIdx)
-    -- -- 创建 Game 对象负责游戏逻辑部分处理
+    -- -- 创建 PlayModel 对象负责游戏逻辑部分处理
     -- self.model_ = PlayModel.new(self,levelIdx)
 end
 
 -- onPeotryDataReady
 function PlayController:initPlayController()
-    -- 挑战失败
+    -- 数据准备完成，开始游戏事件。
     self.model_:addEventListener(PlayModel.ON_GAME_START, 
         handler(self.view_, self.view_.onGameStart)) 
     -- 监听事件，拖放文字到指定区域后放手触发
@@ -98,8 +94,10 @@ function PlayController:onTouch(event,cardGroup)
     --print("--------xxx--------",cardGroup:getChildren()[event["tag"]]:getChildByName("labl"):getString())
     --print("----------- event.name -----------",event.card:getChildByName("labl"):getString())
     --dump(event,"----------- event -----------")
+
 	-- 获取 “炮台” 对象碰撞框
 	local emplacementBoundingBox_ = self.view_:getEmplacement():getBoundingBox()
+    -- 调用逻辑层里的 onTouch 函数进行处理
 	self.model_:onTouch(event,emplacementBoundingBox_)
 	return true
 end

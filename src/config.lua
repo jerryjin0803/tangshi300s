@@ -24,6 +24,9 @@ CONFIG_SCREEN_HEIGHT = 960
 -- auto scale mode
 CONFIG_SCREEN_AUTOSCALE = "FIXED_WIDTH"
 
+-- 转景转换时间
+SceneTransitionTime = 0.6
+ArrarImgOpacity = 180
 -- sounds
 GAME_SFX = {
     tapButton      = "sfx/TapButtonSound.mp3",
@@ -47,7 +50,15 @@ GAME_TEXTURE_DATA_FILENAME  = "AllSprites.plist"
 GAME_TEXTURE_IMAGE_FILENAME = "AllSprites.png"
 
 -- 图片资源名。放到这里好统一管理
+-- 按钮
 WORDCARDBG = "wordBg.png"
+BACKGROUND = "bg.jpg"
+ARROWL = "arrowL.png"
+ARROWL_1 = "arrowL_1.png"
+ARROWR = "arrowR.png"
+ARROWR_1 = "arrowR_1.png"
+BACKBUTTON = "backButton.png"
+BACKBUTTON_1 = "backButton_1.png"
 
 -- 常用汉字库。游戏中用来生成随机汉字之类的。 调试用
 COMMON_CHINESEx = "１２３４５６７"--"笨笨笨笨笨笨笨"
