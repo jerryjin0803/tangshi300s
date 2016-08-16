@@ -13,20 +13,21 @@ function TxtCard:ctor(text, txtBoxSize)
 
     -- 卡牌的大小，如果未传参数进来，就默认用 cc.size(60,80) 
     local txtBoxSize = txtBoxSize  or cc.size(60,80) 
+    local width, height = txtBoxSize.width/2, txtBoxSize.height/2
 
     --打开了子对象的透明度才受控制
     self:setCascadeOpacityEnabled(true) 
 
     -- 创建文字底图，加入容器
-    local txtBg = display.newScale9Sprite(WORDCARDBG, txtBoxSize.width/2, txtBoxSize.height/2)
-    :align(display.CENTER, 0, 0)
+    local txtBg = display.newScale9Sprite(WORDCARDBG, width, height)
+    :align(display.CENTER, width, height)
     :setContentSize(cc.size(txtBoxSize.width, txtBoxSize.height))
     self:addChild(txtBg) --也可以用 :addTo(self)
 
     -- 创建文字，加入容器
     local lab1 = display.newTTFLabel({text=text,color=c3,align=cc.ui.TEXT_ALIGN_CENTER,size=50})
     --lab1:setPosition(cc.p(txtBg:getContentSize().width/2,txtBg:getContentSize().height/2))
-    :align(display.CENTER, 0, 0)
+    :align(display.CENTER, width, height)
     :setName("labl")
     self:addChild(lab1) 
 

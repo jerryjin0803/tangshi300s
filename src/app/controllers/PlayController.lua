@@ -93,11 +93,6 @@ end
                             
 -- 触摸事件是由 PlayView 触发的。交给 PlayController 来分配。
 function PlayController:onTouch(event,cardGroup)
-    --print("------------------ event.tag -----------------",event.tag)
-    --print("--------xxx--------",cardGroup:getChildren()[event["tag"]]:getChildByName("labl"):getString())
-    --print("----------- event.name -----------",event.card:getChildByName("labl"):getString())
-    --dump(event,"----------- event -----------")
-
 	-- 获取 “炮台” 对象碰撞框
 	local emplacementBoundingBox_ = self.view_:getEmplacement():getBoundingBox()
     -- 调用逻辑层里的 onTouch 函数进行处理
@@ -110,14 +105,15 @@ function PlayController:onChooseTheWord(event)
     -- 选完字
     self.view_:onChooseTheWord(event)
 
+    -- 如果选的是对的：加分
     if self.model_.isRight() then
         self.view_.heroViews_.hero_:setScore(self.view_.heroViews_.hero_:getScore()+10)
-        self.view_.heroViews_.hero_:getready()
-        -- print("------------- self.view_.heroViews_.hero_:getScore() ----------",self.view_.heroViews_.hero_:getScore())
-        
-    else
+        self.view_.heroViews_.hero_:getready() --
+        self.view_.heroViews_:updateLabel_2()
+    else -- 否则：扣血
         if not self.view_.heroViews_.hero_:canUnderAttack() then return end
-        self.view_.heroViews_.hero_:gethit()
+        self.view_.heroViews_.hero_:gethit() -- 切到受击状态
+        self.view_.heroViews_.hero_:decreaseHp(1) -- 扣血
     end
 
     return true

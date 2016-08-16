@@ -43,28 +43,38 @@ function ChooseLevelScene:ctor()
     -- 创建选择关卡用的 PageView
     self:createPageView()
 
-    --【开始游戏按钮】跳转到：游戏场景
-    self.gameStartButton = BubbleButton.new({
-            image = STARTBUTTON,
-            image1 = STARTBUTTON_1,
-            -- sound = GAME_SFX.tapButton
-            prepare = function()
-                -- 上面的sound 没用。 BubbleButton 里没有 audio.playSound(params.sound)
-                -- 想了想，还是不要动它，在这里播好了。
-                audio.playSound(GAME_SFX.tapButton)
-            end,
-            listener = function()       
-                --[[ 
-                这 app TMD是怎么来的。为什么 MyApp 类可以这样调用？
-                因为 MyApp 继承自 cc.mvc.AppBase 这个类。
-                它的构造函数最后一句是：app = self 一个全局变量
-                进入游戏场景，这里传入了关卡 ID
-                --]]
-                app:enterPlayScene(self.pv:getCurPageIdx())
-            end,
-        })
-        :align(display.CENTER, display.cx, display.bottom + 300)
+    --【开始游戏按钮】跳转到：游戏场景 (泡泡版)
+    cc.ui.UIPushButton.new({normal = STARTBUTTON, pressed = STARTBUTTON_1})
+        -- 自身中心为锚点，X：屏幕中心，Y：从底部向上偏移 300
+        :align(display.CENTER, display.cx, display.bottom + 300) 
         :addTo(self)
+        :onButtonClicked(function()
+            audio.playSound(GAME_SFX.tapButton)
+            app:enterPlayScene(self.pv:getCurPageIdx())
+        end)
+
+    -- --【开始游戏按钮】跳转到：游戏场景
+    -- self.gameStartButton = BubbleButton.new({
+    --         image = STARTBUTTON,
+    --         image1 = STARTBUTTON_1,
+    --         -- sound = GAME_SFX.tapButton
+    --         prepare = function()
+    --             -- 上面的sound 没用。 BubbleButton 里没有 audio.playSound(params.sound)
+    --             -- 想了想，还是不要动它，在这里播好了。
+    --             audio.playSound(GAME_SFX.tapButton)
+    --         end,
+    --         listener = function()       
+    --             --[[ 
+    --             这 app TMD是怎么来的。为什么 MyApp 类可以这样调用？
+    --             因为 MyApp 继承自 cc.mvc.AppBase 这个类。
+    --             它的构造函数最后一句是：app = self 一个全局变量
+    --             进入游戏场景，这里传入了关卡 ID
+    --             --]]
+    --             app:enterPlayScene(self.pv:getCurPageIdx())
+    --         end,
+    --     })
+    --     :align(display.CENTER, display.cx, display.bottom + 300)
+    --     :addTo(self)
 
         --返回按钮
     cc.ui.UIPushButton.new({normal = ARROWL, pressed = ARROWL_1})

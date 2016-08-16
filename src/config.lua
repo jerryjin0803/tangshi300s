@@ -34,6 +34,8 @@ GAME_SFX = {
     flipCoin       = "sfx/ConFlipSound.mp3",
     levelCompleted = "sfx/LevelWinSound.mp3",
     voltiSound	   = "sfx/VoltiSound.mp3",
+    cannon     = "sfx/Cannon.mp3",
+    coin     = "sfx/Coin.mp3",
 }
 
 -- charactar

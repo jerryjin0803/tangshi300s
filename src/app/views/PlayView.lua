@@ -26,12 +26,22 @@ function PlayView:ctor()
     -- --:setTouchEnabled(false) -- 因为是前景，所以关掉触摸
     -- --PlayView.BGLayer = display.newLayer():addTo(self, -1)
 
+    -- 添加诗人形象
+    self.poet = Actor.new({
+    id = "BOSS",
+    nickname = "Poet",
+    })
+
+    self.heroViews_ = app:createView("HeroView", self.poet)
+            :pos(display.cx, display.cy)
+            :addTo(self)
+
     -- 炮台,子弹(字)拖放上来。它就发射。(就是一个气泡按钮)
-    self.emplacement_ = display.newScale9Sprite("wordBg.png")
-    :setContentSize(cc.size(300, 200))
-    :align(display.CENTER, display.cx, display.bottom + 220)
+    --self.emplacement_ = display.newScale9Sprite("wordBg.png")
+    self.emplacement_ = display.newSprite("cannon.png")
+    :align(display.CENTER, display.cx, display.bottom + 240)
     :addTo(self)    
-    :setOpacity(80)
+    -- :setOpacity(80)
     --[[ 加入测试点，显示锚点 0，0 位置
     :addChild(
         cc.LayerColor:create(cc.c4b(0,0,0,255),5,5)
@@ -42,16 +52,14 @@ function PlayView:ctor()
     -- 获取炮台碰撞框
     self.emplacementBoundingBox_ = self.emplacement_:getBoundingBox()
 
-    -- 添加诗人形象
-    self.poet = Actor.new({
-    id = "poet",
-    nickname = "poet",
-    })
-
-    self.heroViews_ = app:createView("HeroView", self.poet)
-            :pos(display.cx, display.cy)
-            :addTo(self)
-
+    -- 炮台总会变，创建个定位器来当卡牌移动起点
+    self.locator_ = display.newNode()
+    --:addChild(cc.LayerColor:create(cc.c4b(0,0,0,255),20,20)) -- 测试点
+    -- 我也不知道这个偏移量是怎么产生的。和炮台大小位置有关，以后有空再查吧
+    :align(display.BOTTOM_LEFT , 105, 40) -- 
+    :addTo(self)
+    -- cc(self.locator_):addComponent("components.ui.DraggableProtocol")
+    -- :setDraggableEnable(true)
 end
 
 -- 玩家选定一个文字放到指定区域后会触发此事件。
@@ -68,15 +76,14 @@ function PlayView:onChooseTheWord(event)
 
     local p1,p2
     local n1 = self.downGroup:getChildren()[event.value]
-    local n2 = self.emplacement_
+    local n2 = self.locator_ --self.emplacement_ -- 
 
     -- 如果正确，文字卡片飞向诗句中对应的位置。否则飞向屏幕中心对角色造成伤害。
     if event.chooseRight then
-        -- 我也不知道这个偏移量是怎么产生的。和炮台大小位置有关，以后有空再查吧
-        p1 = n1:convertToWorldSpace(cc.p(34,40)) 
+        p1 = n1:convertToWorldSpace(cc.p(0,0))
         p2 = n2:convertToNodeSpace(p1)
     else
-        p1 = cc.p(display.cx+34, display.cy+40) 
+        p1 = cc.p(display.cx - 30 , display.cy -40)  -- 锚点在左下
         p2 = n2:convertToNodeSpace(p1)
     end
 
@@ -160,7 +167,7 @@ function PlayView:onPeotryDataReady(WordUp, WordDown, WordPick)
 
     -- 将容器放置初始位置
     self.upGroup:pos(
-        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordUp_Len-1))/2+ySpacing,
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordUp_Len))/2+ySpacing,
         display.cy 
         )
 
@@ -189,7 +196,7 @@ function PlayView:onPeotryDataReady(WordUp, WordDown, WordPick)
 
     -- 将容器放置初始位置
     self.downGroup:pos(
-        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordDown_Len-1))/2+ySpacing,
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordDown_Len-0))/2+ySpacing,
         display.top - yOffset - txtBoxSize.height - xSpacing 
         )
 
@@ -221,8 +228,8 @@ function PlayView:onPeotryDataReady(WordUp, WordDown, WordPick)
 
     -- 将容器放置初始位置
     self.pickGroup:pos(
-        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordPick_Len-1))/2+ySpacing,
-        display.bottom + txtBoxSize.height
+        xOffset + display.cx - ((txtBoxSize.width+ySpacing)*(WordPick_Len-0))/2+ySpacing,
+        display.bottom + txtBoxSize.height/2
         )
 
 end
@@ -283,6 +290,7 @@ end
 
 -- 卡牌动画 
 function PlayView:wordAction(wordCard, x, y)
+
     -- 卡牌飞行动画
     transition.moveTo(wordCard, 
     {
@@ -292,12 +300,12 @@ function PlayView:wordAction(wordCard, x, y)
         y = y,
         easing = "backout",
         onComplete = function() 
-            -- 播放音效
-            audio.playSound(GAME_SFX.tapButton) 
-
+            
             if self.controller_:isRight() then -- 如果选对了
+                -- 播放音效
+                audio.playSound(GAME_SFX.coin) 
                 print("---------------恭喜选对了。")
-
+                self:method1()
                 if self.controller_:isFinished() then -- 这句填完了
                     print("+++++++++++++++++++++你这句填完了")
 
@@ -309,7 +317,8 @@ function PlayView:wordAction(wordCard, x, y)
             else -- 否则(选错了)
                 -- 攻击了诗人的文字会消失
                 wordCard:setVisible(false)
-
+                audio.playSound(GAME_SFX.cannon) 
+                self:method2()
                 print("--------xxxxxxxx-------坑货，你选错了。")
 
                 if self.controller_:isFailed() then -- 已经失败了
@@ -319,6 +328,32 @@ function PlayView:wordAction(wordCard, x, y)
         end,
     })
 
+end
+-- 成功特效
+function PlayView:method1()
+    -- 读入plist文件
+    local _emitter = cc.ParticleSystemQuad:create("coin.plist")
+    _emitter:setPosition(display.cx, display.cy)
+    :setAutoRemoveOnFinish(true)
+    -- 获得粒子节点列表
+    local batch = cc.ParticleBatchNode:createWithTexture(_emitter:getTexture())
+    batch:addChild(_emitter)
+    self:addChild(batch, 11)
+
+    return _emitter
+end
+-- 受击特效
+function PlayView:method2()
+    -- 读入plist文件
+    local _emitter = cc.ParticleSystemQuad:create("githit.plist")
+    _emitter:setPosition(display.cx, display.cy)
+    :setAutoRemoveOnFinish(true)
+    -- 获得粒子节点列表
+    local batch = cc.ParticleBatchNode:createWithTexture(_emitter:getTexture())
+    batch:addChild(_emitter)
+    self:addChild(batch, 10)
+
+    return _emitter
 end
 
 -- 卡牌复位动画 

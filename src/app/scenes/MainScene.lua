@@ -39,6 +39,17 @@ function MainScene:ctor()
     self:addChild(self.adBar,0)
 
     --【按钮】跳转到：选关界面
+    cc.ui.UIPushButton.new({normal = STARTBUTTON, pressed = STARTBUTTON_1})
+        -- 自身中心为锚点，X：屏幕中心，Y：从底部向上偏移 300
+        :align(display.CENTER, display.cx, display.bottom + 300) 
+        :addTo(self)
+        :onButtonClicked(function()
+            audio.playSound(GAME_SFX.tapButton)
+            app:enterChooseLevelScene()
+        end)
+
+--[[
+    --【按钮】跳转到：选关界面 (泡泡版)
     self.startButton = BubbleButton.new({ -- 创建气泡按钮。
             image = STARTBUTTON,
             image1 = STARTBUTTON_1,
@@ -54,7 +65,6 @@ function MainScene:ctor()
         :align(display.CENTER, display.cx, display.bottom + 300) 
         :addTo(self)
 
---[[
     --【按钮】跳转到：游戏玩法介绍界面
     cc.ui.UIPushButton.new({normal = ARROWL, pressed = ARROWL_1})
         :align(display.LEFT_TOP, display.left - 0, display.top - 0) -- 对齐左上角，偏移量0,0

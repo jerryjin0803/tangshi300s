@@ -31,25 +31,27 @@ function HeroView:ctor(hero)
 
     -- 得分
     self.idLabel_ = cc.ui.UILabel.new({
-            UILabelType = cc.ui.UILabel.LABEL_TYPE_TTF,
+            UILabelType = cc.ui.UILabel.LABEL_TYPE_BM, -- 常数 1
             text = string.format("%s:%s", "$", self.hero_:getScore()),
             size = 20,
+            font = "UIFont.fnt",
             color = cc.c3b(255, 255, 0),
         })
-        :align(display.RIGHT  , 0, 0)
+        :align(display.RIGHT, 0, 0)
         :addTo(self)
-        :pos(180,450)
+        :pos(-50,450)
 
     -- HP 标签
     self.stateLabel_ = cc.ui.UILabel.new({
-            UILabelType = cc.ui.UILabel.LABEL_TYPE_TTF,
+            UILabelType = cc.ui.UILabel.LABEL_TYPE_BM, -- 常数 1
             text = "",
             size = 20,
+            font = "UIFont.fnt",
             color = display.COLOR_RED,
         })
-        --:align(display.width, 0, 0)
+        :align(display.CENTER_TOP, 0, 0)
         :addTo(self)
-        :pos(100,450)
+        :pos(250,490)
 
     self:updateSprite_(self.hero_:getState())
     self:updateLabel_()
@@ -72,8 +74,8 @@ end
 
 function HeroView:updateLabel_2()
     local h = self.hero_
-    --self.idLabel_:setString(string.format("%s:%s", "$", h:getScore()))
-    print("------------------------------------- updateLabel_2 --------------")
+    self.idLabel_:setString(string.format("%s:%s", "$", h:getScore()))
+    print("------------------------------------- updateLabel_2 --------------",h:getScore())
 end
 
 -- -- 不成功，暂时没有用这个
@@ -106,7 +108,7 @@ function HeroView:updateSprite_(state)
 
         print("--------------  state == \"gethit\"   -----------")
         frameName = display.newFrames("gethit_%02d.png", 1, 2) -- MyApp 里加载了图集,这里直接用
-        animation = display.newAnimation(frameName, 0.2 / 2) -- 0.5s play 20 frames
+        animation = display.newAnimation(frameName, 0.1 / 2) -- 0.5s play 20 frames
     end
 
     if not frameName then return end

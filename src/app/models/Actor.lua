@@ -53,7 +53,7 @@ function Actor:ctor(properties, events, callbacks)
         onchangestate = handler(self, self.onChangeState_),
         onstart       = handler(self, self.onStart_),
         onready       = handler(self, self.onReady_),
-        onunderattack = handler(self, self.onUnderAttack_),
+        onunderAttack = handler(self, self.onUnderAttack_),
     }
     -- 如果继承类提供了其他回调，则合并
     table.merge(defaultCallbacks, checktable(callbacks))
@@ -114,9 +114,6 @@ function Actor:setFullHp()
 end
 
 function Actor:increaseHp(hp)
-    assert(not self:isDead(), string.format("actor %s:%s is dead, can't change Hp", self:getId(), self:getNickname()))
-    assert(hp > 0, "Actor:increaseHp() - invalid hp")
-
     local newhp = self.hp_ + hp
     if newhp > self:getMaxHp() then
         newhp = self:getMaxHp()
@@ -131,8 +128,6 @@ function Actor:increaseHp(hp)
 end
 
 function Actor:decreaseHp(hp)
-    assert(not self:isDead(), string.format("actor %s:%s is dead, can't change Hp", self:getId(), self:getNickname()))
-    assert(hp > 0, "Actor:increaseHp() - invalid hp")
 
     local newhp = self.hp_ - hp
     if newhp <= 0 then
@@ -142,9 +137,6 @@ function Actor:decreaseHp(hp)
     if newhp < self.hp_ then
         self.hp_ = newhp
         self:dispatchEvent({name = Actor.HP_CHANGED_EVENT})
-        if newhp == 0 then
-            self.fsm__:doEvent("kill")
-        end
     end
 
     return self
@@ -155,6 +147,7 @@ end
 function Actor:onChangeState_(event)
     printf("actor %s:%s state change from %s to %s", self:getId(), self.nickname_, event.from, event.to)
     event = {name = Actor.CHANGE_STATE_EVENT, from = event.from, to = event.to}
+    --print("++++++++++++++++++++++++ Actor:onChangeState_(event)------------------------------")
     self:dispatchEvent(event)
 end
 
