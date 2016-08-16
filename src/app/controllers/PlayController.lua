@@ -21,7 +21,7 @@ function PlayController:initPlayController()
         handler(self.view_, self.view_.onGameStart)) 
     -- 监听事件，拖放文字到指定区域后放手触发
     self.model_:addEventListener(PlayModel.CHOOSE_THE_WORD, 
-        handler(self.view_, self.view_.onChooseTheWord)) 
+        handler(self, self.onChooseTheWord)) 
     -- 胜利事件，当前诗词库已空。过关
     self.model_:addEventListener(PlayModel.ON_LEVEL_COMPLETED, 
         handler(self.view_, self.view_.onLevelCompleted)) 
@@ -34,7 +34,9 @@ function PlayController:initPlayController()
     -- 卡牌归位
     self.model_:addEventListener(PlayModel.CHOOSE_END_BACK_EVENT, 
         handler(self.view_, self.view_.wordActionBack))
-
+    -- -- 选错结果，诗人受击，扣分等
+    -- self.model_:addEventListener(PlayModel.CHOOSE_WRONG_EVENT, 
+    --     handler(self, self.onChooseWrong))
     -- 创建诗词的卡牌，布局，添加UI动画...
 	self:onPeotryDataReady()
 
@@ -65,6 +67,7 @@ end
 function PlayController:setView(view)
 	self.view_ = view
     self.view_:setController(self) -- 把显示层的 controller_ 变量，设置为自己
+
 end
 
 function PlayController:getView()
@@ -87,7 +90,7 @@ end
 function PlayController:isFailed()
     return self.model_.isFailed()
 end
-
+                            
 -- 触摸事件是由 PlayView 触发的。交给 PlayController 来分配。
 function PlayController:onTouch(event,cardGroup)
     --print("------------------ event.tag -----------------",event.tag)
@@ -100,6 +103,24 @@ function PlayController:onTouch(event,cardGroup)
     -- 调用逻辑层里的 onTouch 函数进行处理
 	self.model_:onTouch(event,emplacementBoundingBox_)
 	return true
+end
+
+-- -- 选错结果，诗人受击，扣分等
+function PlayController:onChooseTheWord(event)
+    -- 选完字
+    self.view_:onChooseTheWord(event)
+
+    if self.model_.isRight() then
+        self.view_.heroViews_.hero_:setScore(self.view_.heroViews_.hero_:getScore()+10)
+        self.view_.heroViews_.hero_:getready()
+        -- print("------------- self.view_.heroViews_.hero_:getScore() ----------",self.view_.heroViews_.hero_:getScore())
+        
+    else
+        if not self.view_.heroViews_.hero_:canUnderAttack() then return end
+        self.view_.heroViews_.hero_:gethit()
+    end
+
+    return true
 end
 
 return PlayController

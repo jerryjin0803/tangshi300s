@@ -26,7 +26,7 @@ CONFIG_SCREEN_AUTOSCALE = "FIXED_WIDTH"
 
 -- 转景转换时间
 SceneTransitionTime = 0.6
-ArrarImgOpacity = 180
+ArrarImgOpacity = 200
 -- sounds
 GAME_SFX = {
     tapButton      = "sfx/TapButtonSound.mp3",
@@ -59,6 +59,12 @@ ARROWR = "arrowR.png"
 ARROWR_1 = "arrowR_1.png"
 BACKBUTTON = "backButton.png"
 BACKBUTTON_1 = "backButton_1.png"
+NAMEBG = "nameBg.png"
+GAMEOVERVICTORY = "gameOverVictory.png"
+GAMEOVERFAILE = "gameOverFaile.png"
+STARTBUTTON = "startButton.png"
+STARTBUTTON_1 = "startButton_1.png"
+GAMENAME = "gameName.png"
 
 -- 常用汉字库。游戏中用来生成随机汉字之类的。 调试用
 COMMON_CHINESEx = "１２３４５６７"--"笨笨笨笨笨笨笨"

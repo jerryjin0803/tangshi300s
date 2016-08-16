@@ -1,7 +1,7 @@
 local AdBar = {}
 
 function AdBar.new()
-    local sprite = cc.ui.UIPushButton.new({normal = "#AdBar.png"})
+    local sprite = cc.ui.UIPushButton.new({normal = "AdBar.png"})
     sprite:align(display.BOTTOM_CENTER, display.cx, display.bottom)
     sprite:onButtonClicked(function()
         -- 打开网址。模拟器没反应，但是我只在模拟上玩。坑了

@@ -1,6 +1,7 @@
 local Levels = import("..data.Levels")-- 关卡等级数据，诗人诗句之类的
 local BubbleButton = import("..views.BubbleButton")-- 官方例子里的气泡按钮,正好用来当发炮效果
 local AdBar = import("..views.AdBar")
+-- local Clouds = import("..views.Clouds") -- 背景上的云层效果
 
 local ChooseLevelScene = class("ChooseLevelScene", function()
     return display.newScene("ChooseLevelScene")
@@ -15,16 +16,27 @@ function ChooseLevelScene:ctor()
     local bg = display.newScale9Sprite(BACKGROUND, display.cx, display.cy, display.size)
     -- make background sprite always align top
     bg:setPosition(display.cx, display.top - bg:getContentSize().height / 2)
-    self:addChild(bg)
+    self:addChild(bg, -1)
+
+    -- -- 创建 云
+    -- self.clouds_ = Clouds.new()
+    -- self:addChild(self.clouds_, -1) -- 加入场景才会显示出来。
 
     self.adBar = AdBar.new()
     self:addChild(self.adBar)
 
+    --关卡名称文字底框
+    self.LevelNameBg = display.newSprite(NAMEBG, display.cx, display.top-150)
+    self:addChild(self.LevelNameBg)
+
     --关卡名称
     self.LevelNamelabel = cc.ui.UILabel.new({
+        font = "KaiTi",
         UILabelType = 2,
         text = BOSS_LIST[1],
-        size = 64})
+        size = 64,
+        color = cc.c3b(171, 225, 253) -- 文字颜色（可选），用 cc.c3b() 指定，默认为白色
+        })
     :align(display.CENTER, display.cx, display.top-150)
     self:addChild(self.LevelNamelabel)
 
@@ -33,7 +45,8 @@ function ChooseLevelScene:ctor()
 
     --【开始游戏按钮】跳转到：游戏场景
     self.gameStartButton = BubbleButton.new({
-            image = "#MenuSceneStartButton.png",
+            image = STARTBUTTON,
+            image1 = STARTBUTTON_1,
             -- sound = GAME_SFX.tapButton
             prepare = function()
                 -- 上面的sound 没用。 BubbleButton 里没有 audio.playSound(params.sound)
@@ -50,7 +63,7 @@ function ChooseLevelScene:ctor()
                 app:enterPlayScene(self.pv:getCurPageIdx())
             end,
         })
-        :align(display.CENTER, display.cx, display.bottom + 200)
+        :align(display.CENTER, display.cx, display.bottom + 300)
         :addTo(self)
 
         --返回按钮
@@ -70,7 +83,7 @@ end
 function ChooseLevelScene:createPageView()
     -- 创建 UIPageView 用于装载关卡BOSS形象
     self.pv = cc.ui.UIPageView.new {
-            viewRect = cc.rect(40, 300, 560, 500), -- 视图区域范围
+            viewRect = cc.rect(10, 300, 620, 500), -- 视图区域范围
             column = 1, row = 1, -- 1行1列
             padding = {left = 20, right = 20, top = 20, bottom = 20}, -- 上下左右的填充距离
             columnSpace = 0, rowSpace = 0, -- 列间距，行间距

@@ -13,6 +13,7 @@ end
 function MyApp:run()
     -- 添加资源搜索的路径
     cc.FileUtils:getInstance():addSearchPath("res/")
+    
     -- 加载图集。 大写字母的这些是 config 里定义的全局变量
     display.addSpriteFrames(GAME_TEXTURE_DATA_FILENAME, GAME_TEXTURE_IMAGE_FILENAME)
 

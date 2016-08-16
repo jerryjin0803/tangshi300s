@@ -4,6 +4,7 @@
 
 local PlayModel = import("..models.PlayModel") -- 逻辑层
 local PlayView = import("..views.PlayView") -- 官方例子里的气泡按钮,正好用来当发炮效果
+local Clouds = import("..views.Clouds") -- 背景上的云层效果
 local PlayController = import("..controllers.PlayController") -- 官方例子里的气泡按钮,正好用来当发炮效果
 
 local PlayScene = class("PlayScene", function()
@@ -35,7 +36,11 @@ function PlayScene:ctor(levelIdx)
 
     -- 创建一个精灵作为背景图. plist里的图片名字前加 # 区分(图片名统一放到 config 里去了)
     local bg = display.newScale9Sprite(BACKGROUND, display.cx, display.cy, display.size) 
-    self:addChild(bg) -- 将背景图加载到场景默认图层 self 中。
+    self:addChild(bg, -1) -- 将背景图加载到场景默认图层 self 中。
+
+    -- 创建 云
+    self.clouds_ = Clouds.new()
+    self:addChild(self.clouds_,-1) -- 加入场景才会显示出来。
 
     -- -- 例子里带的加载一张图片作为 Title。 不碍事，暂时留着
     -- local title = display.newSprite("#Title.png", display.left + 150, display.top - 50)
@@ -43,7 +48,7 @@ function PlayScene:ctor(levelIdx)
     -- self:addChild(title)
 
     --返回按钮
-    cc.ui.UIPushButton.new({normal = BACKBUTTON, pressed = BACKBUTTON_1})
+    self.back_btn = cc.ui.UIPushButton.new({normal = BACKBUTTON, pressed = BACKBUTTON_1})
         --:setButtonSize(20, 20)    --设置按钮大小
         :align(display.LEFT_TOP, display.left +10 , display.top - 10) 
         :onButtonClicked(function()

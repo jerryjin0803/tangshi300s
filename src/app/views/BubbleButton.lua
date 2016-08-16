@@ -59,7 +59,7 @@ function BubbleButton.new(params)
         end)
     end
 
-    button =  cc.ui.UIPushButton.new({normal = params.image})
+    button =  cc.ui.UIPushButton.new({normal = params.image, pressed = params.image1})
     button:onButtonClicked(function(tag)
         params.listener(tag)
     end)

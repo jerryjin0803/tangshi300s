@@ -5,6 +5,7 @@
 require("app.models.MathEx") -- 对 math 数学库的一些扩展功能
 
 local TxtCard = import("..views.TxtCard") -- 每一个字就是一张卡牌
+local Actor = import("..models.Actor")
 
 local txtBoxSize = cc.size(60,80) -- 文本框大小
 
@@ -40,6 +41,16 @@ function PlayView:ctor()
 
     -- 获取炮台碰撞框
     self.emplacementBoundingBox_ = self.emplacement_:getBoundingBox()
+
+    -- 添加诗人形象
+    self.poet = Actor.new({
+    id = "poet",
+    nickname = "poet",
+    })
+
+    self.heroViews_ = app:createView("HeroView", self.poet)
+            :pos(display.cx, display.cy)
+            :addTo(self)
 
 end
 
@@ -81,8 +92,9 @@ function PlayView:onLevelCompleted(event)
     audio.playSound(GAME_SFX.levelCompleted)
 
     --创建并显示 胜利UI 。点击回到选关界面
-    local dialog = cc.ui.UIPushButton.new({normal = "#LevelCompletedDialogBg.png"})
-    dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
+    local dialog = cc.ui.UIPushButton.new({normal = GAMEOVERVICTORY})
+    -- dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
+    dialog:pos(display.cx, display.cy + 50)
     dialog:onButtonClicked(function()
         audio.playSound(GAME_SFX.backButton)    -- 播放音效
         app:enterChooseLevelScene() -- 切换场景
@@ -90,16 +102,30 @@ function PlayView:onLevelCompleted(event)
 
     PlayView.FGLayer:setVisible(true) -- 前景层默认被我们关掉了，现在先把它显示出来
     PlayView.FGLayer:addChild(dialog) -- 弹窗放进前景层里
-    transition.moveTo(dialog, {time = 0.7, y = display.cy + dialog:getContentSize().height / 2 + 40, easing = "BOUNCEOUT"})
+
+    self:getParent().back_btn:hide() -- 隐藏返回按钮
+
+    -- 循环缩放动画
+    dialog:runAction(cc.RepeatForever:create(cc.Sequence:create(
+        cc.ScaleTo:create(0.2, 1.3),
+        cc.ScaleTo:create(0.7, 1.0),
+        cc.CallFunc:create(function() 
+            --print ("------- cc.RepeatForever:create ---------") 
+            end)
+        ))
+    )
+
 end
+
 -- 挑战失败
 function PlayView:onLevelFailure(event)
     print("xxxxxxxxxxxxxxxx=PlayView:onLevelFailure=xxxxxxxxxxxxxx")
     audio.playSound(GAME_SFX.levelCompleted)
 
     --创建并显示 失败UI 。点击回到选关界面
-    local dialog = cc.ui.UIPushButton.new({normal = "#LevelCompletedDialogBg.png"})
-    dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
+    local dialog = cc.ui.UIPushButton.new({normal = GAMEOVERFAILE})
+    --dialog:setPosition(display.cx, display.top + dialog:getContentSize().height / 2 + 40)
+    dialog:pos(display.cx, display.cy + 50)
     dialog:onButtonClicked(function()
         audio.playSound(GAME_SFX.backButton)    -- 播放音效
         app:enterChooseLevelScene() -- 切换场景
@@ -107,8 +133,9 @@ function PlayView:onLevelFailure(event)
 
     PlayView.FGLayer:setVisible(true) -- 前景层默认被我们关掉了，现在先把它显示出来
     PlayView.FGLayer:addChild(dialog) -- 弹窗放进前景层里
-    dialog:rotation(180) -- 测试时用的
-    transition.moveTo(dialog, {time = 0.7, y = display.cy + dialog:getContentSize().height / 2 + 40, easing = "BOUNCEOUT"})
+    --transition.moveTo(dialog, {time = 0.7, y = display.cy + dialog:getContentSize().height / 2 + 40, easing = "BOUNCEOUT"})
+    transition.scaleTo(dialog, {time = 0.7, scale = 1.2, easing = "BOUNCEOUT"})
+    self:getParent().back_btn:hide() -- 隐藏返回按钮
 end
 
 -- 创建诗词的卡牌，布局，添加UI动画...
