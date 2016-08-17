@@ -98,10 +98,14 @@ end
 -- function MainScene:init()
 -- end
 
--- function MainScene:onEnter()
--- end
+function MainScene:onEnter()
+    -- 进入场景开始播放背景音乐
+    audio.playMusic(GAME_MUSIC.bgm_2, true)
+end
 
 -- function MainScene:onExit()
+    -- 退出场景关闭当前背景音乐
+    -- audio.stopMusic(false)
 -- end
 
 return MainScene

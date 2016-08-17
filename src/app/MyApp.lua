@@ -15,14 +15,23 @@ function MyApp:run()
     cc.FileUtils:getInstance():addSearchPath("res/")
     
     -- 加载图集。 大写字母的这些是 config 里定义的全局变量
+    -- BOSS动画帧
     display.addSpriteFrames(GAME_TEXTURE_DATA_FILENAME, GAME_TEXTURE_IMAGE_FILENAME)
+    -- BOSS形象图
+    display.addSpriteFrames(CHARACTAR_DATA_FILENAME,CHARACTAR_IMAGE_FILENAME) --
+
 
     -- preload all sounds 
-    -- 预加载所有音效资源。但是这会造成开游戏前白屏卡顿几秒。应该改成异步才好
-    -- GAME_SFX 是 config 里定义的全局变量
+    -- 预加载所有音效资源。GAME_SFX 是 config 里定义的全局变量
+    --但是这会造成开游戏前白屏卡顿几秒。应该改成异步才好
     for k, v in pairs(GAME_SFX) do
         audio.preloadSound(v)
     end
+
+    -- -- 预加载所有音乐资源。GAME_MUSIC 是 config 里定义的全局变量 -- 音乐出慢点好像也无妨
+    -- for k, v in pairs(GAME_MUSIC) do
+    --     audio.preloadMusic(v)
+    -- end
 
     -- 进入游戏主界面
     self:enterMainScene()

@@ -99,6 +99,9 @@ end
 function HeroView:updateSprite_(state)
     local frameName
     local animation
+    print("--------------  getId   -----------",self.hero_:getId(),self.hero_:getId() == 1)
+
+if self.hero_:getId() == "1" then -- 目前只有李白做了动画。其它的，就直接放图算了
 
     if state == "idle" or state == "none" then
         print("--------------  state == \"idle\"   -----------")
@@ -114,6 +117,15 @@ function HeroView:updateSprite_(state)
     if not frameName then return end
     transition.stopTarget(self.sprite_)
     self.sprite_:playAnimationForever(animation)
+
+else
+    -- 其实没有做动画的角色，暂时用这个顶一下
+    self.sprite_:setSpriteFrame(display.newSpriteFrame(
+        string.format("char_%03d.png", self.hero_:getId())
+    ))
+    :setPositionY(display.CENTER + 50 )
+
+end
 
 end
 

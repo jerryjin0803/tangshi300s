@@ -27,29 +27,38 @@ CONFIG_SCREEN_AUTOSCALE = "FIXED_WIDTH"
 -- 转景转换时间
 SceneTransitionTime = 0.6
 ArrarImgOpacity = 200
+
 -- sounds
 GAME_SFX = {
     tapButton      = "sfx/TapButtonSound.mp3",
     backButton     = "sfx/BackButtonSound.mp3",
-    flipCoin       = "sfx/ConFlipSound.mp3",
-    levelCompleted = "sfx/LevelWinSound.mp3",
+    victory       = "sfx/Victory.mp3",
+    defeat       = "sfx/Defeat.mp3",
     voltiSound	   = "sfx/VoltiSound.mp3",
     cannon     = "sfx/Cannon.mp3",
     coin     = "sfx/Coin.mp3",
 }
 
+-- music
+GAME_MUSIC = {
+    bgm_1 = "sfx/BGM_01.mp3",
+    bgm_2 = "sfx/SoulAndHeart.mp3"
+}
+
 -- charactar
 GAME_CHARACTAR = {
-    "charactar/char_001.png",
-    "charactar/char_002.png",
-    "charactar/char_003.png",
-    "charactar/char_004.png",
-    "charactar/char_001.png",
+    "#char_001.png",
+    "#char_002.png",
+    "#char_003.png",
+    "#char_004.png",
+    "#char_005.png",
 }
 
 -- 打包图集
 GAME_TEXTURE_DATA_FILENAME  = "AllSprites.plist"
 GAME_TEXTURE_IMAGE_FILENAME = "AllSprites.png"
+CHARACTAR_DATA_FILENAME  = "Charactar.plist"
+CHARACTAR_IMAGE_FILENAME = "Charactar.png"
 
 -- 图片资源名。放到这里好统一管理
 -- 按钮

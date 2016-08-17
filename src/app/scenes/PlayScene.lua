@@ -19,7 +19,7 @@ function PlayScene:ctor(levelIdx)
     self.control_ = PlayController.new(levelIdx)
 
     -- 创建 playView 对象负责游戏显示(文字卡部分)
-    self.playView_ = PlayView.new()
+    self.playView_ = PlayView.new(levelIdx)
     self:addChild(self.playView_,1) -- 加入场景才会显示出来。
 
     -- 初始化 PlayController
@@ -96,9 +96,16 @@ self.goButton = BubbleButton.new({
 
 end
 
+function PlayScene:onEnter()
+    -- 进入场景开始播放背景音乐
+    audio.playMusic(GAME_MUSIC.bgm_1, true)
+end
+
 function PlayScene:onExit()
     print("------------- PlayScene:onEnter() -------------")
     audio.stopAllSounds() -- 退出场景时终止所以有音效。
+    -- 退出场景关闭当前背景音乐
+    -- audio.stopMusic(false)
 end
 
 return PlayScene

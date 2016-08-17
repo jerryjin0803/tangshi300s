@@ -35,10 +35,14 @@ function GamesHelpScene:ctor()
         :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
 end
 
--- function AboutScene:onEnter()
--- end
+function GamesHelpScene:onEnter()
+    -- 进入场景开始播放背景音乐
+    audio.playMusic(GAME_MUSIC.bgm_2, true)
+end
 
--- function AboutScene:onExit()
+-- function GamesHelpScene:onExit()
+    -- 退出场景关闭当前背景音乐
+    -- audio.stopMusic(false)
 -- end
 
 return GamesHelpScene

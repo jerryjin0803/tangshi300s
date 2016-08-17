@@ -13,8 +13,8 @@ local PlayView = class("PlayView", function()
     return display.newLayer()
 end)
 
-function PlayView:ctor()
-    print("------------------ PlayView ---------------")
+function PlayView:ctor(index)
+    print("------------------ PlayView ---------------",type(index))
 
     -- 关闭事件吞噬，因为有些按钮放在后面的场景上
     self:setTouchSwallowEnabled(false)
@@ -28,7 +28,7 @@ function PlayView:ctor()
 
     -- 添加诗人形象
     self.poet = Actor.new({
-    id = "BOSS",
+    id = tostring(index) ,
     nickname = "Poet",
     })
 
@@ -96,7 +96,11 @@ end
 -- 胜利过关
 function PlayView:onLevelCompleted(event)
     print("===============PlayView:onLevelCompleted==============")
-    audio.playSound(GAME_SFX.levelCompleted)
+
+    -- 胜利音效
+    audio.playSound(GAME_SFX.victory)
+    -- 停掉背景音效
+    audio.stopMusic(false)
 
     --创建并显示 胜利UI 。点击回到选关界面
     local dialog = cc.ui.UIPushButton.new({normal = GAMEOVERVICTORY})
@@ -109,8 +113,9 @@ function PlayView:onLevelCompleted(event)
 
     PlayView.FGLayer:setVisible(true) -- 前景层默认被我们关掉了，现在先把它显示出来
     PlayView.FGLayer:addChild(dialog) -- 弹窗放进前景层里
-
-    self:getParent().back_btn:hide() -- 隐藏返回按钮
+    -- 创建一个精灵作为背景图. plist里的图片名字前加 # 区分(图片名统一放到 config 里去了)
+    local bg = display.newScale9Sprite(BACKGROUND, display.cx, display.cy, display.size) 
+    PlayView.FGLayer:addChild(bg, -1) -- 将背景图加载到场景默认图层 self 中。
 
     -- 循环缩放动画
     dialog:runAction(cc.RepeatForever:create(cc.Sequence:create(
@@ -127,7 +132,10 @@ end
 -- 挑战失败
 function PlayView:onLevelFailure(event)
     print("xxxxxxxxxxxxxxxx=PlayView:onLevelFailure=xxxxxxxxxxxxxx")
-    audio.playSound(GAME_SFX.levelCompleted)
+    -- 停掉背景音效
+    audio.stopMusic(false)
+    -- 失败音效
+    audio.playSound(GAME_SFX.defeat)
 
     --创建并显示 失败UI 。点击回到选关界面
     local dialog = cc.ui.UIPushButton.new({normal = GAMEOVERFAILE})
@@ -140,9 +148,21 @@ function PlayView:onLevelFailure(event)
 
     PlayView.FGLayer:setVisible(true) -- 前景层默认被我们关掉了，现在先把它显示出来
     PlayView.FGLayer:addChild(dialog) -- 弹窗放进前景层里
-    --transition.moveTo(dialog, {time = 0.7, y = display.cy + dialog:getContentSize().height / 2 + 40, easing = "BOUNCEOUT"})
-    transition.scaleTo(dialog, {time = 0.7, scale = 1.2, easing = "BOUNCEOUT"})
-    self:getParent().back_btn:hide() -- 隐藏返回按钮
+    -- 创建一个精灵作为背景图. plist里的图片名字前加 # 区分(图片名统一放到 config 里去了)
+    local bg = display.newScale9Sprite(BACKGROUND, display.cx, display.cy, display.size) 
+    PlayView.FGLayer:addChild(bg, -1) -- 将背景图加载到场景默认图层 self 中。
+    
+    -- 循环缩放动画
+    dialog:runAction(cc.RepeatForever:create(cc.Sequence:create(
+        cc.ScaleTo:create(0.2, 1.3),
+        cc.ScaleTo:create(0.7, 1.0),
+        cc.CallFunc:create(function() 
+            --print ("------- cc.RepeatForever:create ---------") 
+            end)
+        ))
+    )
+    -- transition.scaleTo(dialog, {time = 0.7, scale = 1.2, easing = "BOUNCEOUT"})
+    -- self:getParent().back_btn:hide() -- 隐藏返回按钮
 end
 
 -- 创建诗词的卡牌，布局，添加UI动画...

@@ -110,7 +110,7 @@ function ChooseLevelScene:createPageView()
         local content = display.newSprite(v)
         --print("图片坐标在：x[".. item:getPositionX() .."]y["..item:getPositionY().."]")
         --print("中心在："..display.cx .. "图片宽一半："..content:getContentSize().width/2)
-        content:setPosition(display.cx - content:getContentSize().width/4, display.c_top/2)
+        content:setPosition(display.cx - content:getContentSize().width/6, display.c_top/2)
         item:addChild(content)  -- 添加关卡人物精灵到 item 中
 
         self.pv:addItem(item)  -- 添加 item 到 UIPageView 中      
@@ -118,8 +118,6 @@ function ChooseLevelScene:createPageView()
     self.pv:reload() --刷新 UIPageView
 
 end
-
-
 
 -- 触控相应事件【翻页】
 function ChooseLevelScene:touchListener(event)
@@ -140,5 +138,16 @@ function ChooseLevelScene:refresh(pageIdx)
     -- 显示对应的BOSS名称
     self.LevelNamelabel:setString(BOSS_LIST[pageIdx])
 end
+
+function ChooseLevelScene:onEnter()
+    -- 进入场景开始播放背景音乐
+    audio.playMusic(GAME_MUSIC.bgm_2, true)
+end
+
+-- function ChooseLevelScene:onExit()
+    -- 退出场景关闭当前背景音乐
+    -- audio.stopMusic(false)
+-- end
+
 
 return ChooseLevelScene

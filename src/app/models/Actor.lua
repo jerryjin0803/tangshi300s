@@ -113,6 +113,10 @@ function Actor:setFullHp()
     return sef
 end
 
+function Actor:getId()
+    return self.id_
+end
+
 function Actor:increaseHp(hp)
     local newhp = self.hp_ + hp
     if newhp > self:getMaxHp() then
