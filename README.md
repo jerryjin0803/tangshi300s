@@ -1,6 +1,7 @@
 # tangshi300s
 
 大家好，我是笨笨，笨笨的笨，笨笨的笨，谢谢！
+http://blog.csdn.net/jx520
 
 这是一个名叫《躺尸三百首》的游戏DEMO
 
