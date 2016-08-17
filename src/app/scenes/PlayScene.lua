@@ -7,6 +7,7 @@ local PlayView = import("..views.PlayView") -- 官方例子里的气泡按钮,�
 local Clouds = import("..views.Clouds") -- 背景上的云层效果
 local PlayController = import("..controllers.PlayController") -- 官方例子里的气泡按钮,正好用来当发炮效果
 
+
 local PlayScene = class("PlayScene", function()
     return display.newScene("PlayScene")
 end)

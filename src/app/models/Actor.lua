@@ -22,7 +22,7 @@ Actor.UNDER_ATTACK_EVENT  = "UNDER_ATTACK_EVENT"
 Actor.schema = clone(cc.mvc.ModelBase.schema)
 Actor.schema["nickname"] = {"string"} -- 字符串类型，没有默认值
 Actor.schema["hp"]       = {"number", 1}
-Actor.schema["score"]       = {"number", 0}
+Actor.schema["score"]    = {"number", 0}
 
 
 function Actor:ctor(properties, events, callbacks)
@@ -43,9 +43,9 @@ function Actor:ctor(properties, events, callbacks)
         {name = "underAttack",  from = "idle",  to = "gethit"},
     }
     -- 如果继承类提供了其他事件，则合并
-    print("-------------------------------------------")
-    dump(events)
-    print("-------------------------------------------")
+    -- print("-------------------------------------------")
+    -- dump(events)
+    -- print("-------------------------------------------")
     table.insertto(defaultEvents, checktable(events))
 
     -- 设定状态机的默认回调

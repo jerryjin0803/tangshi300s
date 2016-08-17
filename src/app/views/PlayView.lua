@@ -36,9 +36,10 @@ function PlayView:ctor(index)
             :pos(display.cx, display.cy)
             :addTo(self)
 
+
     -- 炮台,子弹(字)拖放上来。它就发射。(就是一个气泡按钮)
     --self.emplacement_ = display.newScale9Sprite("wordBg.png")
-    self.emplacement_ = display.newSprite("cannon.png")
+    self.emplacement_ = display.newSprite(CANNON)
     :align(display.CENTER, display.cx, display.bottom + 240)
     :addTo(self)    
     -- :setOpacity(80)
@@ -222,9 +223,9 @@ function PlayView:onPeotryDataReady(WordUp, WordDown, WordPick)
 
     -- 容器动画，淡入
     self.downGroup:setOpacity(10)
-    transition.fadeIn(self.downGroup, 
+    self.downGroupfadeIn_ = transition.fadeIn(self.downGroup, 
     {
-        time = 5, 
+        time = DOWNGROUPFADEINTIME, 
         delay = 1,
         --easing = "backout",
         --onComplete = function() print("下句已出，请填空！") end,
@@ -311,16 +312,13 @@ end
 -- 卡牌动画 
 function PlayView:wordAction(wordCard, x, y)
 
-    -- 卡牌飞行动画
-    transition.moveTo(wordCard, 
-    {
-        time = .2, 
-        delay = 0,
-        x = x,
-        y = y,
-        easing = "backout",
-        onComplete = function() 
-            
+ wordCard:runAction(cc.Sequence:create(  
+         cc.EaseBackOut:create(cc.MoveTo:create(.2, cc.p(x, y))),  
+         -- cc.FadeIn:create(.1),
+         -- cc.EaseBackOut:create(cc.ScaleTo:create(1, 1.2, 1.2)),
+         -- cc.EaseBackOut:create(cc.ScaleTo:create(1, 1, 1)),
+         cc.CallFunc:create(function() 
+            print("++++++++++++++++++++++++++++++++++++++++++++++++++++")
             if self.controller_:isRight() then -- 如果选对了
                 -- 播放音效
                 audio.playSound(GAME_SFX.coin) 
@@ -328,10 +326,20 @@ function PlayView:wordAction(wordCard, x, y)
                 self:method1()
                 if self.controller_:isFinished() then -- 这句填完了
                     print("+++++++++++++++++++++你这句填完了")
+                    -- 如果填完了，就直接不透明设置到 100%
+                    transition.removeAction(self.downGroupfadeIn_)
+                    self.downGroup:setOpacity(255)
 
                     -- 尚未通关。 继续刷新显示下一句
                     if not self.controller_:isVictory() then
-                        self.controller_:onPeotryDataReady()
+                        transition.scaleTo(self.downGroup, {
+                            time = 1,
+                            scale = 1, 
+                            easing = "backout",
+                            onComplete = function() 
+                                self.controller_:onPeotryDataReady() 
+                            end
+                            })
                     end
                 end
             else -- 否则(选错了)
@@ -343,17 +351,56 @@ function PlayView:wordAction(wordCard, x, y)
 
                 if self.controller_:isFailed() then -- 已经失败了
                     print("xxxxxxxxxxxxxxxxxxxxxxx 你挂了")
-                end
+                end    
             end
-        end,
-    })
+
+         end)))    
+
+    -- -- 卡牌飞行动画
+    -- transition.moveTo(wordCard, 
+    -- {
+    --     time = .2, 
+    --     delay = 0,
+    --     x = x,
+    --     y = y,
+    --     easing = "backout",
+    --     onComplete = function() 
+            
+    --             if self.controller_:isRight() then -- 如果选对了
+    --                 -- 播放音效
+    --                 audio.playSound(GAME_SFX.coin) 
+    --                 print("---------------恭喜选对了。")
+    --                 self:method1()
+    --                 if self.controller_:isFinished() then -- 这句填完了
+    --                     print("+++++++++++++++++++++你这句填完了")
+    --                     -- 如果填完了，就直接不透明设置到 100%
+    --                     self.downGroup:setOpacity(255)
+
+    --                     -- 尚未通关。 继续刷新显示下一句
+    --                     if not self.controller_:isVictory() then
+    --                         self.controller_:onPeotryDataReady()
+    --                     end
+    --                 end
+    --             else -- 否则(选错了)
+    --                 -- 攻击了诗人的文字会消失
+    --                 wordCard:setVisible(false)
+    --                 audio.playSound(GAME_SFX.cannon) 
+    --                 self:method2()
+    --                 print("--------xxxxxxxx-------坑货，你选错了。")
+
+    --                 if self.controller_:isFailed() then -- 已经失败了
+    --                     print("xxxxxxxxxxxxxxxxxxxxxxx 你挂了")
+    --                 end
+    --             end
+    --         end,
+    --     })
 
 end
 -- 成功特效
 function PlayView:method1()
     -- 读入plist文件
-    local _emitter = cc.ParticleSystemQuad:create("coin.plist")
-    _emitter:setPosition(display.cx, display.cy)
+    local _emitter = cc.ParticleSystemQuad:create("fx/coin.plist")
+    _emitter:setPosition(display.cx, display.height)
     :setAutoRemoveOnFinish(true)
     -- 获得粒子节点列表
     local batch = cc.ParticleBatchNode:createWithTexture(_emitter:getTexture())
@@ -365,7 +412,7 @@ end
 -- 受击特效
 function PlayView:method2()
     -- 读入plist文件
-    local _emitter = cc.ParticleSystemQuad:create("githit.plist")
+    local _emitter = cc.ParticleSystemQuad:create("fx/githit.plist")
     _emitter:setPosition(display.cx, display.cy)
     :setAutoRemoveOnFinish(true)
     -- 获得粒子节点列表

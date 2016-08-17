@@ -28,8 +28,8 @@ function Clouds:MakeCloud()
 	--随机播种子
     --math.randomseed(tostring(os.time()):reverse():sub(1, 6))
     mathEx_randNumArray(9)
-    --生成随机图片 index
-    randImg = string.format("cloud_%02d.png", mathEx_randNumArray(9)[3])
+    --生成随机图片 index 。 图都打包在 AllSprites 图集里了
+    randImg = string.format("#cloud_%02d.png", mathEx_randNumArray(9)[3])
 
 	--随机播种子
     -- math.randomseed(tostring(os.time()):reverse():sub(1, 6))
@@ -86,15 +86,18 @@ function Clouds:onEnter()
 	    end
 
 	end
-    self.handle = scheduler.scheduleGlobal(onInterval, 3) -- 每隔一会生成一朵云
+    self.handleX = scheduler.scheduleGlobal(onInterval, 3) -- 每隔一会生成一朵云
     self.handle = scheduler.scheduleUpdateGlobal(update) -- 每帧更新云的位置，超出视图就移除
     -- print("--------- Clouds:onEnter() ----------")
 
 end
 
 function Clouds:onExit()
+    -- 退出时，两个记时器都要清掉
     scheduler.unscheduleGlobal(self.handle)
-    -- print("--------- Clouds:onExit() ----------")
+    scheduler.unscheduleGlobal(self.handleX)
+
+    print("--------- Clouds:onExit() ----------")
 end
 
 return Clouds

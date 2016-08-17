@@ -9,6 +9,7 @@
     4、反正我感觉触控的东西一真不怎么人性化的。搞了几个 IDE 结果招万人唾骂。我只想说，你们的用户体验难到是程序给的解决方案？不过最近这个抄 U3D 的 CocosCreator 感觉好像还行。但愿能抄好。
     5、当然用过 Quick 的凭良心讲不可能喜欢 Cocos2dx 那套搞法，所以泰然网出了个社区版 Quick-Cocos2dx-Community 据说也得到了 Quick 作者的支持。想想下次如果再玩 Lua 估计会选这个版本了。
     6、其实我还是满喜欢 H5 的。毕竟非程序员，还是喜欢轻便的开发环境，还要打包什么的才能分享出去，太不方便了。
+
 --]]
 
 local AdBar = import("..views.AdBar")   -- 官方例子里的广告条，感觉不错，P下图就能用了。所以留着
@@ -76,7 +77,7 @@ function MainScene:ctor()
         :addTo(self)
         -- 不透明度在指定时间内，从 0 到 70
         :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
-
+--]]
     --【按钮】跳转到：笨笨简介界面
     cc.ui.UIPushButton.new({normal = ARROWR, pressed = ARROWR_1})
         :align(display.RIGHT_TOP, display.right + 0, display.top - 0)
@@ -88,7 +89,7 @@ function MainScene:ctor()
         :addTo(self)
         -- 不透明度在指定时间内，从 0 到 70
         :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
---]]
+
 
     -- 初始化相关数据
     -- self:init()

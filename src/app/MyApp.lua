@@ -17,9 +17,8 @@ function MyApp:run()
     -- 加载图集。 大写字母的这些是 config 里定义的全局变量
     -- BOSS动画帧
     display.addSpriteFrames(GAME_TEXTURE_DATA_FILENAME, GAME_TEXTURE_IMAGE_FILENAME)
-    -- BOSS形象图
-    display.addSpriteFrames(CHARACTAR_DATA_FILENAME,CHARACTAR_IMAGE_FILENAME) --
-
+    -- BOSS形象图 (选关界面用)
+    display.addSpriteFrames(CHARACTAR_DATA_FILENAME,CHARACTAR_IMAGE_FILENAME)
 
     -- preload all sounds 
     -- 预加载所有音效资源。GAME_SFX 是 config 里定义的全局变量
