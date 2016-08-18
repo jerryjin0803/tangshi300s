@@ -40,7 +40,7 @@ function PlayScene:ctor(levelIdx)
     self:addChild(bg, -1) -- 将背景图加载到场景默认图层 self 中。
 
     -- 创建 云
-    self.clouds_ = Clouds.new()
+    self.clouds_ = Clouds.new(.5, 3)
     self:addChild(self.clouds_,-1) -- 加入场景才会显示出来。
 
     -- -- 例子里带的加载一张图片作为 Title。 不碍事，暂时留着
@@ -58,7 +58,7 @@ function PlayScene:ctor(levelIdx)
         end)
         :addTo(self)
         -- 不透明度在指定时间内，从 0 到 70
-        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity + 50) 
+        :setOpacity(0):fadeTo(BUTTONFADEIN, ARRARIMGOPACITY + 50) 
 
 --[[调试用：显示上句
 self.labelup = cc.ui.UILabel.new({

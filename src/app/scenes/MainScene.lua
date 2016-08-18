@@ -31,8 +31,11 @@ function MainScene:ctor()
     -- self:addChild(self.clouds_,-1) -- 加入场景才会显示出来。
 
     -- 游戏名称
-    self.gameName = display.newSprite(GAMENAME, display.cx, display.cy + 200)
+    self.gameName = display.newSprite(GAMENAME, display.cx, display.cy + 320)
     self:addChild(self.gameName)
+
+    self.fiveRing = display.newSprite(OLYMPICFIVERING, display.cx, display.cy +70)
+    self:addChild(self.fiveRing)
 
 
     -- 添加广告栏
@@ -76,7 +79,7 @@ function MainScene:ctor()
         end)
         :addTo(self)
         -- 不透明度在指定时间内，从 0 到 70
-        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
+        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ARRARIMGOPACITY) 
 --]]
     --【按钮】跳转到：笨笨简介界面
     cc.ui.UIPushButton.new({normal = ARROWR, pressed = ARROWR_1})
@@ -88,7 +91,7 @@ function MainScene:ctor()
         end)
         :addTo(self)
         -- 不透明度在指定时间内，从 0 到 70
-        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
+        :setOpacity(0):fadeTo(BUTTONFADEIN, ARRARIMGOPACITY) 
 
 
     -- 初始化相关数据

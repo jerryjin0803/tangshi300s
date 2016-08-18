@@ -1,6 +1,6 @@
 
 -- 0 - disable debug info, 1 - less debug info, 2 - verbose debug info
-DEBUG = 0
+DEBUG = 2
 
 -- display FPS stats on screen
 DEBUG_FPS = false
@@ -25,8 +25,9 @@ CONFIG_SCREEN_HEIGHT = 960
 CONFIG_SCREEN_AUTOSCALE = "FIXED_WIDTH"
 
 -- 转景转换时间
-SceneTransitionTime = 0.6
-ArrarImgOpacity = 200
+SCENETRANSITIONTIME = 0.6
+BUTTONFADEIN = 1
+ARRARIMGOPACITY = 200
 
 -- 填空诗句，淡入时间
 DOWNGROUPFADEINTIME = 15
@@ -45,7 +46,8 @@ GAME_SFX = {
 -- music
 GAME_MUSIC = {
     bgm_1 = "sfx/BGM_01.mp3",
-    bgm_2 = "sfx/SoulAndHeart.mp3"
+    bgm_2 = "sfx/SoulAndHeart.mp3",
+    bgm_3 = "sfx/XiaoDaoHui.mp3"
 }
 
 -- 打包图集
@@ -79,6 +81,7 @@ GETHITFRAMES = "gethit_%02d.png" -- 受击动画帧
 -- 背景图
 BACKGROUND = "#bg.jpg"
 GAMENAME = "#gameName.png" -- 游戏名称
+OLYMPICFIVERING = "#olympicFiveRing.png" -- 奥运五环
 
 -- 按钮
 WORDCARDBG = "#wordBg.png" -- 文字卡牌的底图

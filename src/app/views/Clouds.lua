@@ -10,7 +10,7 @@ local Clouds = class("Clouds", function()
     return display.newLayer()
 end)
 
-function Clouds:ctor()
+function Clouds:ctor(speed,makeSpeed)
     print("------------------ Clouds ---------------")
 
     -- 关闭事件吞噬，因为有些按钮放在后面的场景上
@@ -19,25 +19,26 @@ function Clouds:ctor()
     self:setNodeEventEnabled(true)
 
 	self.cloudsGroup_ = {}
+
+    self.speed_ = speed -- 云的移动数度
+    self.makeSpeed_ = makeSpeed -- 出云的间隔时间
 end
 
 -- 造云函数。
-function Clouds:MakeCloud()
-
-	--print("------- tostring(os.time()):reverse() -------",tostring(os.time()):reverse():sub(1, 6))
-	--随机播种子
-    --math.randomseed(tostring(os.time()):reverse():sub(1, 6))
-    mathEx_randNumArray(9)
-    --生成随机图片 index 。 图都打包在 AllSprites 图集里了
-    randImg = string.format("#cloud_%02d.png", mathEx_randNumArray(9)[3])
+function Clouds:MakeCloud(rseed)
 
 	--随机播种子
-    -- math.randomseed(tostring(os.time()):reverse():sub(1, 6))
+    math.randomseed(tostring(rseed):reverse():sub(1, 6))
+    randImg = string.format("#cloud_%02d.png", math.random(1, 9))
+
+    -- --生成随机图片 index 。 图都打包在 AllSprites 图集里了
+    -- randImg = string.format("#cloud_%02d.png", mathEx_randNumArray(9)[3])
+
+	--随机播种子
+    math.randomseed(tonumber(tostring(rseed):reverse():sub(2, 7)))
     --生成随机坐标
-    -- randX = math.random(0, display.width)
+    randX = math.random(0, display.width)
     
-    randX = mathEx_randNumArray(display.width)[13]
-
 	-- --随机播种子
  --    math.randomseed(tostring(os.time()):reverse():sub(4, 6))
  --    --生成随机坐标
@@ -54,7 +55,12 @@ function Clouds:MakeCloud()
     	--print("------------- cloud:flipX(true)  --------------")
     end
      
-    cloud.speed = .5 -- 云的移动数度
+    --随机播种子
+    math.randomseed(tonumber(tostring(rseed):reverse():sub(3, 8)))
+    --随机缩放
+    cloud:setScale(math.random(0, 2))
+
+    cloud.speed = self.speed_-- 云的移动数度
     self.cloudsGroup_[#self.cloudsGroup_ + 1] = cloud  -- 添加到云数组中
 
 end
@@ -65,7 +71,8 @@ function Clouds:onEnter()
         time = time + 1
         --dump(dt,"--------dt------------")
         --print(string.format("%d", time))
-        self:MakeCloud()
+        -- 我不知道 dt 是啥，不过好像用来做随机种子不错
+        self:MakeCloud(dt)
     end
 
     -- 每帧更新云的位置，超出视图就移除
@@ -86,7 +93,7 @@ function Clouds:onEnter()
 	    end
 
 	end
-    self.handleX = scheduler.scheduleGlobal(onInterval, 3) -- 每隔一会生成一朵云
+    self.handleX = scheduler.scheduleGlobal(onInterval, self.makeSpeed_) -- 每隔一会生成一朵云
     self.handle = scheduler.scheduleUpdateGlobal(update) -- 每帧更新云的位置，超出视图就移除
     -- print("--------- Clouds:onEnter() ----------")
 

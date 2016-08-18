@@ -85,7 +85,7 @@ function ChooseLevelScene:ctor()
         end)
         :addTo(self)
         -- 不透明度在指定时间内，从 0 到 70
-        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
+        :setOpacity(0):fadeTo(BUTTONFADEIN, ARRARIMGOPACITY) 
 
 end
 

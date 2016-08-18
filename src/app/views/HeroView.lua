@@ -113,7 +113,7 @@ if self.hero_:getId() == "1" then -- 目前只有李白做了动画。其它的�
     if state == "idle" or state == "none" then
         print("--------------  state == \"idle\"   -----------")
         frameName = display.newFrames("idle_%02d.png", 1, 2) -- MyApp 里加载了图集,这里直接用
-        animation = display.newAnimation(frameName, 0.5 / 2) -- 0.5s play 20 frames
+        animation = display.newAnimation(frameName, .5 / 2) -- 0.5s play 20 frames
     elseif state == "gethit" then
 
         print("--------------  state == \"gethit\"   -----------")

@@ -42,16 +42,16 @@ function AboutScene:ctor()
         end)
         :addTo(self)
         -- 不透明度在指定时间内，从 0 到 70
-        :setOpacity(0):fadeTo(SceneTransitionTime * 3, ArrarImgOpacity) 
+        :setOpacity(0):fadeTo(BUTTONFADEIN, ARRARIMGOPACITY) 
 
     -- 创建 云
-    self.clouds_ = Clouds.new()
+    self.clouds_ = Clouds.new(5,.15)
     self:addChild(self.clouds_,-1) -- 加入场景才会显示出来。
 end
 
 function AboutScene:onEnter()
     -- 进入场景开始播放背景音乐
-    audio.playMusic(GAME_MUSIC.bgm_2, true)
+    audio.playMusic(GAME_MUSIC.bgm_3, true)
 end
 
 -- function AboutScene:onExit()

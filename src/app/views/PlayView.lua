@@ -118,15 +118,28 @@ function PlayView:onLevelCompleted(event)
     local bg = display.newScale9Sprite(BACKGROUND, display.cx, display.cy, display.size) 
     PlayView.FGLayer:addChild(bg, -1) -- 将背景图加载到场景默认图层 self 中。
 
-    -- 循环缩放动画
+    --[[ 创建并循环播放一个动画序列
+        播放： runAction   参数就是一个 action,返回的也是 action 用于之后控制暂停之类的
+            virtual Action* runAction(Action* action);
+        播放次数：除了 RepeatForever 还可以用 Repeat 播放特定次数:
+            static Repeat* create(FiniteTimeAction *action, unsigned int times);
+        播放顺序:
+            按顺序逐个播: Sequence
+            同个 action 一起播: Spawn
+        缓动效果：放到序列里就行了，参数就是要缓动的那个 Action。
+            cc.EaseBackOut:create(cc.ScaleTo:create(1, 1, 1)),
+        还没试过，不知道是否能互相嵌套实现复杂动画效果
+    --]]
     dialog:runAction(cc.RepeatForever:create(cc.Sequence:create(
-        cc.ScaleTo:create(0.2, 1.3),
-        cc.ScaleTo:create(0.7, 1.0),
-        cc.CallFunc:create(function() 
-            --print ("------- cc.RepeatForever:create ---------") 
-            end)
-        ))
-    )
+        -- cc.DelayTime:create(1.0), -- 延时一秒
+        cc.ScaleTo:create(0.0001, 1, 1), -- 因为下面缩放了，这里要还原一下
+        cc.JumpTo:create(0.5, cc.p(display.cx, display.cy-50), 300, 1),
+        cc.ScaleTo:create(0.1, 1.5, .5),
+        cc.DelayTime:create(.1) -- 延时一秒
+        -- cc.CallFunc:create(function() -- 执行一个函数。
+        --      print ("------- cc.RepeatForever:create ---------") 
+        -- end)
+    )))
 
 end
 
@@ -155,13 +168,12 @@ function PlayView:onLevelFailure(event)
     
     -- 循环缩放动画
     dialog:runAction(cc.RepeatForever:create(cc.Sequence:create(
-        cc.ScaleTo:create(0.2, 1.3),
-        cc.ScaleTo:create(0.7, 1.0),
-        cc.CallFunc:create(function() 
-            --print ("------- cc.RepeatForever:create ---------") 
-            end)
-        ))
-    )
+        cc.ScaleTo:create(0.0001, 1, 1), -- 因为下面缩放了，这里要还原一下
+        cc.JumpTo:create(0.5, cc.p(display.cx, display.cy-50), 300, 1),
+        cc.ScaleTo:create(0.1, 1.5, .5),
+        cc.DelayTime:create(.1) -- 延时一秒
+    )))
+
     -- transition.scaleTo(dialog, {time = 0.7, scale = 1.2, easing = "BOUNCEOUT"})
     -- self:getParent().back_btn:hide() -- 隐藏返回按钮
 end
@@ -332,14 +344,17 @@ function PlayView:wordAction(wordCard, x, y)
 
                     -- 尚未通关。 继续刷新显示下一句
                     if not self.controller_:isVictory() then
-                        transition.scaleTo(self.downGroup, {
-                            time = 1,
-                            scale = 1, 
-                            easing = "backout",
-                            onComplete = function() 
-                                self.controller_:onPeotryDataReady() 
-                            end
-                            })
+                        -- 闪烁几下作提示效果。然后调用刷新
+                        self.downGroup:runAction(
+                            cc.RepeatForever:create(
+                                cc.Sequence:create(
+                                    cc.Blink:create(1.5, 3),
+                                    cc.DelayTime:create(.2), -- 延时
+                                    cc.CallFunc:create(function() -- 执行一个函数。
+                                         self.controller_:onPeotryDataReady() 
+                                    end)
+                        )))
+
                     end
                 end
             else -- 否则(选错了)

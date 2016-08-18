@@ -46,13 +46,13 @@
             <key>idle_02.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{602,400},{396,578}}</string>
+                <string>{{602,400},{396,554}}</string>
                 <key>offset</key>
-                <string>{-1,-11}</string>
+                <string>{-1,-23}</string>
                 <key>rotated</key>
                 <false/>
                 <key>sourceColorRect</key>
-                <string>{{36,22},{396,578}}</string>
+                <string>{{36,46},{396,554}}</string>
                 <key>sourceSize</key>
                 <string>{470,600}</string>
             </dict>
@@ -66,7 +66,7 @@
             <key>size</key>
             <string>{1024,1024}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:26e2b873a4299704a631b314cb800d3d:1/1$</string>
+            <string>$TexturePacker:SmartUpdate:3c96d6c77186a8bf10180789d7107bcc:1/1$</string>
             <key>textureFileName</key>
             <string>BOSS_libai_Frames.png</string>
         </dict>
