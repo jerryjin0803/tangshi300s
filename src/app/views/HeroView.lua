@@ -46,7 +46,7 @@ function HeroView:ctor(hero)
         })
         :align(display.CENTER_TOP, 0, 0)
         :addTo(self)
-        :pos(0,485)
+        :pos(0, display.height/2 )
 
     -- HP 标签
     self.stateLabel_ = cc.ui.UILabel.new({
@@ -58,7 +58,7 @@ function HeroView:ctor(hero)
         })
         :align(display.CENTER_TOP, 0, 0)
         :addTo(self)
-        :pos(250,485)
+        :pos(250,display.height/2 )
 
     -- 按状态更新BOSS动画，初始
     self:updateSprite_(self.hero_:getState())
